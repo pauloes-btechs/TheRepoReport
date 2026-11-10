@@ -226,3 +226,26 @@ export function mergeRepos(existing: WatchedRepo[], incoming: WatchedRepo[]): { 
   }
   return { repos, added };
 }
+
+export const CONFIG_REPO = 'pauloes-btechs/TheRepoReport';
+/** GitHub accepts URLs well past this, but browsers and proxies may not. */
+export const MAX_ISSUE_URL = 7500;
+
+/**
+ * Pre-filled GitHub issue that .github/workflows/config-update.yml turns into a
+ * commit on main. Only issues opened by the repository owner are applied.
+ * Returns undefined when the URL would be too long to open reliably.
+ */
+export function saveToProductionUrl(files: { name: 'watchlist.json' | 'editorial.json'; content: string }[]): string | undefined {
+  if (files.length === 0) return undefined;
+  const names = files.map((f) => f.name).join(' and ');
+  const body = [
+    'Submit this issue to save the configuration below to production.',
+    'A workflow validates it, commits it to `main` and closes this issue. Editing the JSON here is fine.',
+    '',
+    ...files.flatMap((f) => [`\`\`\`json file=${f.name}`, f.content.trimEnd(), '```', '']),
+  ].join('\n');
+  const params = new URLSearchParams({ title: `[config] Update ${names}`, body });
+  const url = `https://github.com/${CONFIG_REPO}/issues/new?${params.toString()}`;
+  return url.length <= MAX_ISSUE_URL ? url : undefined;
+}

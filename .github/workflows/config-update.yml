@@ -1,0 +1,87 @@
+name: Config update
+
+# The Settings page's "Save to production" button opens a pre-filled issue
+# titled "[config] ..." containing the new config files. When the repository
+# owner submits it, this workflow validates the files, commits them to main as
+# the owner, comments the result and closes the issue. Issues from anyone else
+# are ignored, so no token ever lives in the browser.
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: config-update
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: >-
+      github.event.issue.user.login == github.repository_owner &&
+      startsWith(github.event.issue.title, '[config]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # commit the config files to main
+      issues: write     # comment on and close the request
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Validate and write config
+        id: apply
+        env:
+          # Passed through the environment, never interpolated into the script.
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          SUMMARY_FILE: ${{ runner.temp }}/summary.md
+        run: npx tsx scripts/apply-config-issue.ts --config-dir config
+
+      - name: Commit to main
+        id: commit
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GIT_AUTHOR_NAME: Pauloes Berhe
+          GIT_AUTHOR_EMAIL: pauloes@btechs.io
+          GIT_COMMITTER_NAME: Pauloes Berhe
+          GIT_COMMITTER_EMAIL: pauloes@btechs.io
+        run: |
+          git add config/watchlist.json config/editorial.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "The submitted configuration matches what is already on main." >> "$RUNNER_TEMP/summary.md"
+            exit 0
+          fi
+          git commit -m "config: update from Settings page (#$ISSUE_NUMBER)"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Report and close
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          OUTCOME: ${{ steps.apply.outcome }}
+          SHA: ${{ steps.commit.outputs.sha }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body="$(cat "$RUNNER_TEMP/summary.md" 2>/dev/null || echo "The update did not finish.")"
+          if [ -n "$SHA" ]; then body="$body"$'\n\n'"Commit: https://github.com/$REPO/commit/$SHA"; fi
+          body="$body"$'\n\n'"[Workflow run]($RUN_URL)"
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "$body"
+          if [ "$OUTCOME" = "success" ]; then
+            gh issue close "$ISSUE_NUMBER" --repo "$REPO" --reason completed
+          fi
