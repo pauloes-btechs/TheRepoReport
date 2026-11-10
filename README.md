@@ -39,7 +39,7 @@ Production configuration lives in two version-controlled files:
 - [`config/watchlist.json`](config/watchlist.json): repositories, category, priority (1–3), enabled, topics. With `includeStarred: true`, the public stars of `githubUser` are merged in at run time (config entries win, capped at `maxRepos`).
 - [`config/editorial.json`](config/editorial.json): topic interests, rubric weights (must total 100), minimum score, max stories, target length, retention, narrator voice, Ollama model, inference budget, pronunciation lexicon.
 
-The site's **Settings** page edits a *draft* of these files in your browser, shows a diff against what is deployed, and gives you a download or a link to GitHub's editor. Drafts change nothing until committed. The site never asks for a token.
+The site's **Settings** page edits a *draft* of these files in your browser and shows a diff against what is deployed. **Save to production** opens a pre-filled GitHub issue; when you (the owner) submit it, a workflow validates the files and commits them to `main`. The site never asks for a token. Details in [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 To add the repositories you **watch** (this needs authentication, so it runs locally):
 

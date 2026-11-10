@@ -19,6 +19,7 @@ import {
   mergeRepos,
   newWatchedRepo,
   parseRepoInput,
+  saveToProductionUrl,
   serializeConfig,
   splitTopics,
   validateEditorial,
@@ -189,7 +190,7 @@ function ProductionSettings() {
         </p>
       </div>
       <div role="note" className="rounded-xl border border-warn-fg/40 bg-warn-bg px-4 py-3 text-sm text-warn-fg">
-        <strong>Drafts are stored only in this browser and change nothing until committed to the repository.</strong> This page never asks for
+        <strong>Drafts are stored only in this browser and change nothing until you save them to production.</strong> This page never asks for
         a GitHub token.
       </div>
       {state.status === 'loading' && <PageSkeleton label="Loading the deployed configuration" />}
@@ -242,11 +243,25 @@ export function ConfigEditor({ manifest }: { manifest: Manifest }) {
         </h3>
         <ChangeList title="watchlist.json" changes={watchlistChanges} />
         <ChangeList title="editorial.json" changes={editorialChanges} />
-        <ol className="list-decimal space-y-1 pl-5 text-sm text-ink-2">
-          <li>Download the changed file.</li>
-          <li>Open it in the GitHub editor, replace the contents and commit.</li>
-          <li>The next scheduled edition uses the new configuration.</li>
-        </ol>
+        <SaveToProduction
+          files={[
+            ...(watchlistChanges.length > 0 && watchlistErrors.length === 0
+              ? [{ name: 'watchlist.json' as const, content: serializeConfig(draft.watchlist) }]
+              : []),
+            ...(editorialChanges.length > 0 && editorialErrors.length === 0
+              ? [{ name: 'editorial.json' as const, content: serializeConfig(draft.editorial) }]
+              : []),
+          ]}
+          blocked={watchlistErrors.length + editorialErrors.length > 0}
+        />
+        <details className="text-sm text-ink-2">
+          <summary className="cursor-pointer font-medium text-ink">Or edit the files by hand</summary>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>Download the changed file.</li>
+            <li>Open it in the GitHub editor, replace the contents and commit.</li>
+            <li>The next scheduled edition uses the new configuration.</li>
+          </ol>
+        </details>
         <div className="grid gap-4 sm:grid-cols-2">
           <FileActions
             name="watchlist.json"
@@ -683,6 +698,40 @@ export function ChangeList({ title, changes }: { title: string; changes: ConfigC
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function SaveToProduction({ files, blocked }: { files: { name: 'watchlist.json' | 'editorial.json'; content: string }[]; blocked: boolean }) {
+  const url = blocked ? undefined : saveToProductionUrl(files);
+  const names = files.map((f) => f.name).join(' and ');
+  return (
+    <div className="rounded-xl border border-signal/40 bg-signal-soft p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        {url ? (
+          <a href={url} target="_blank" rel="noreferrer noopener" className={primary}>
+            Save to production
+            <span className="sr-only"> (opens GitHub in a new tab)</span>
+          </a>
+        ) : (
+          <button type="button" className={primary} disabled>
+            Save to production
+          </button>
+        )}
+        <p className="text-sm text-ink-2">
+          {blocked
+            ? 'Fix the problems above first.'
+            : files.length === 0
+              ? 'Nothing to save: the draft matches production.'
+              : url
+                ? `Saves ${names}.`
+                : 'The change is too large to send this way; use the download option below.'}
+        </p>
+      </div>
+      <p className="mt-2 text-xs text-ink-3">
+        Opens a pre-filled GitHub issue. Click <strong>Create</strong> while signed in as the repository owner; a workflow checks the
+        files, commits them to <code>main</code> and closes the issue within about a minute. The next edition uses the new configuration.
+      </p>
     </div>
   );
 }

@@ -112,9 +112,11 @@ describe('settings', () => {
     serve(siteRoutes(fixtureManifest(), allReports()));
     go('/settings');
     render(<App />);
-    expect(screen.getByText('Drafts are stored only in this browser and change nothing until committed to the repository.')).toBeInTheDocument();
+    expect(screen.getByText('Drafts are stored only in this browser and change nothing until you save them to production.')).toBeInTheDocument();
     const add = await screen.findByLabelText('Add a repository');
     expect(screen.getAllByText('Same as deployed.')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Save to production' })).toBeDisabled();
+    expect(screen.getByText('Nothing to save: the draft matches production.')).toBeInTheDocument();
 
     fireEvent.change(add, { target: { value: 'not a repo' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -125,6 +127,11 @@ describe('settings', () => {
     const watchlistChanges = screen.getByRole('list', { name: 'Changes to watchlist.json' });
     expect(watchlistChanges).toHaveTextContent('Added');
     expect(watchlistChanges).toHaveTextContent('repos.golang/go');
+    const save = screen.getByRole('link', { name: /Save to production/ });
+    const issue = new URL(save.getAttribute('href')!);
+    expect(issue.pathname).toBe('/pauloes-btechs/TheRepoReport/issues/new');
+    expect(issue.searchParams.get('title')).toBe('[config] Update watchlist.json');
+    expect(issue.searchParams.get('body')).toContain('"repo": "golang/go"');
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove vexl-it/vexl' }));
     expect(watchlistChanges).toHaveTextContent('repos.vexl-it/vexl');
@@ -132,6 +139,8 @@ describe('settings', () => {
     fireEvent.change(screen.getByLabelText('Security and safety'), { target: { value: '30' } });
     expect(screen.getByText(/Total: 105 of 100/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download editorial.json' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save to production' })).toBeDisabled();
+    expect(screen.getByText('Fix the problems above first.')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Changes to editorial.json' })).toHaveTextContent('weights.security');
 
     const editLink = screen.getAllByRole('link', { name: /Open in GitHub editor/ })[0]!;

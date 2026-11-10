@@ -18,6 +18,17 @@ These need a person with admin rights; the workflow cannot do them itself.
 
 The first scheduled or manual run finds no live manifest (HTTP 404) and no state, treats that as the first run, and publishes an archive with a single edition.
 
+
+## Changing the watchlist or editorial settings
+
+1. Open the site's **Settings** page and edit the draft (it is kept only in your browser).
+2. Click **Save to production**. GitHub opens a pre-filled issue titled `[config] Update …`.
+3. Click **Create** while signed in as the repository owner.
+
+`.github/workflows/config-update.yml` then validates the files against the same schemas the pipeline uses, commits them to `main` as Pauloes Berhe, comments with the commit link and closes the issue. If validation fails, nothing is written; the issue stays open with the reason. Issues from anyone other than the owner are ignored. The next edition uses the new configuration.
+
+You can still edit `config/watchlist.json` or `config/editorial.json` directly on GitHub.
+
 ## Schedule and edition identity
 
 Runs start at **7:15, 13:15 and 19:15 New York time**. The schedule uses `timezone: "America/New_York"`, so GitHub handles daylight-saving changes. The edition key (`YYYY-MM-DD-morning|afternoon|evening`) comes from the New York wall clock when the run starts (`shared/edition.ts`), not from which cron fired. A run that starts 50 minutes late is still the right edition. A run before 7:05 belongs to the previous evening.
