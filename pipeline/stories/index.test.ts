@@ -207,3 +207,39 @@ describe('collect → buildStories on recorded fixtures', () => {
     expect(stories[0]!.title).toBe('Signature verification bypass in tinycrypt');
   });
 });
+
+describe('advisories and the releases that patch them', () => {
+  const REPO_V = 'vitejs/vite';
+
+  it('joins an advisory with the releases listed as patched, and the fix PR quoted in the notes', () => {
+    const stories = buildStories(
+      [
+        advisory(REPO_V, 'GHSA-wxyz-wxyz-wxyz', { body: 'Patched versions: 8.3.7, 7.3.12\n\nRemote code execution …' }),
+        release(REPO_V, 'v8.3.7', { body: '- fix: escape ids in resolve virtual modules' }),
+        release(REPO_V, 'v7.3.12', { body: 'Backport of the 8.3.7 security fix.' }),
+        pull(REPO_V, 501, { title: 'fix: escape ids in resolve virtual modules', state: 'merged', mergedAt: '2026-11-09T10:00:00Z' }),
+        release(REPO_V, 'v8.3.6', { body: '- fix: unrelated' }),
+      ],
+      {},
+    );
+    const joined = stories.find((s) => s.events.some((e) => e.kind === 'advisory'))!;
+    expect(joined.events.map((e) => e.id).sort()).toEqual(
+      ['advisory:GHSA-wxyz-wxyz-wxyz', `pull_request:${REPO_V}#501`, `release:${REPO_V}:v7.3.12`, `release:${REPO_V}:v8.3.7`].sort(),
+    );
+    expect(joined.status).toBe('released');
+    expect(stories).toHaveLength(2);
+  });
+
+  it('joins a release whose notes cite the advisory id, but never across repositories', () => {
+    const stories = buildStories(
+      [
+        advisory(REPO_V, 'GHSA-aaaa-bbbb-cccc', { cveId: 'CVE-2026-1234' }),
+        release(REPO_V, 'v9.0.1', { body: 'Fixes CVE-2026-1234.' }),
+        release('other/repo', 'v9.0.1', { body: 'Fixes CVE-2026-1234.' }),
+      ],
+      {},
+    );
+    expect(stories).toHaveLength(2);
+    expect(stories.find((s) => s.repo === REPO_V)!.events).toHaveLength(2);
+  });
+});

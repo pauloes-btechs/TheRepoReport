@@ -4,6 +4,7 @@
  * conservative title-similarity pass for stragglers.
  */
 import type { PipelineState, RawEvent } from '../../shared/schemas';
+import { PATCHED_PREFIX } from '../collect/normalize';
 
 class UnionFind {
   private parent = new Map<string, string>();
@@ -74,6 +75,7 @@ export function groupEvents(events: RawEvent[], known: PipelineState['stories'])
 
   for (const e of events) linkReferences(e, uf, byKey, knownByEventId);
   linkReleasesByTitle(events, uf);
+  linkAdvisoriesToReleases(events, uf);
   linkSimilarTitles(events, known, uf);
 
   const groups = new Map<string, Component>();
@@ -130,6 +132,29 @@ function linkReleasesByTitle(events: RawEvent[], uf: UnionFind): void {
       if (lower(pull.repo) !== lower(release.repo)) continue;
       const title = normalizeText(stripConventionalPrefix(pull.title));
       if (title.length >= MIN_TITLE_MATCH_CHARS && notes.includes(title)) uf.union(release.id, pull.id);
+    }
+  }
+}
+
+const VERSION = /\d+\.\d+(?:\.\d+)?/g;
+const versionOf = (tag: string | undefined) => tag?.match(/\d+\.\d+(?:\.\d+)?/)?.[0];
+
+/**
+ * A security fix ships as an advisory plus the release(s) that patch it. Link
+ * them when the advisory lists the release's version as patched, or when the
+ * release notes cite the advisory's GHSA or CVE id.
+ */
+function linkAdvisoriesToReleases(events: RawEvent[], uf: UnionFind): void {
+  const releases = events.filter((e) => e.kind === 'release');
+  for (const advisory of events.filter((e) => e.kind === 'advisory')) {
+    const patchedLine = advisory.body.startsWith(PATCHED_PREFIX) ? advisory.body.split('\n', 1)[0]! : '';
+    const patched = new Set(patchedLine.match(VERSION) ?? []);
+    const ids = [advisory.ghsaId, advisory.cveId].filter((id): id is string => !!id).map(lower);
+    for (const release of releases) {
+      if (lower(release.repo) !== lower(advisory.repo)) continue;
+      const version = versionOf(release.tagName);
+      const cited = ids.some((id) => lower(release.body).includes(id));
+      if ((version && patched.has(version)) || cited) uf.union(advisory.id, release.id);
     }
   }
 }
