@@ -1,0 +1,407 @@
+name: Edition
+
+# Three editions a day, New York time (DST handled by GitHub via `timezone`).
+# The edition key is derived from the wall clock when the run starts, not from
+# which cron fired, so a late run still lands in the right slot.
+on:
+  schedule:
+    - cron: '15 7 * * *'
+      timezone: "America/New_York"
+    - cron: '15 13 * * *'
+      timezone: "America/New_York"
+    - cron: '15 19 * * *'
+      timezone: "America/New_York"
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: 'Edition key override, e.g. 2026-11-10-evening (blank = derive from current New York time)'
+        type: string
+        required: false
+        default: ''
+      force:
+        description: 'Publish even if this edition is already live (replaces it)'
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Build everything but do not deploy or advance state'
+        type: boolean
+        default: false
+      model:
+        description: 'Ollama model override (blank = config/editorial.json model)'
+        type: string
+        required: false
+        default: ''
+      force_fallback:
+        description: 'Skip the LLM and use the deterministic fallback briefing'
+        type: boolean
+        default: false
+      force_no_audio:
+        description: 'Simulate a Piper failure (publish without downloadable audio)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # push the `state` branch
+  pages: write      # deploy to GitHub Pages
+  id-token: write   # OIDC for deploy-pages
+
+concurrency:
+  group: edition
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      status: ${{ steps.run.outputs.status || (steps.precheck.outputs.proceed == 'false' && 'skipped') || 'failed' }}
+      deploy: ${{ steps.run.outputs.deploy }}
+      edition: ${{ steps.precheck.outputs.edition }}
+    env:
+      INPUT_EDITION: ${{ inputs.edition }}
+      INPUT_FORCE: ${{ inputs.force }}
+      INPUT_DRY_RUN: ${{ inputs.dry_run }}
+      INPUT_MODEL: ${{ inputs.model }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Start memory sampling
+        run: |
+          mkdir -p .work
+          echo "RUN_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+          nohup bash -c 'while true; do free -m | awk "/^Mem:/{print \$3}" >> .work/mem-used-mb.log; sleep 5; done' >/dev/null 2>&1 &
+          nohup vmstat -S M 5 > .work/vmstat.log 2>&1 &
+          free -m
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check whether this edition is already published
+        id: precheck
+        run: |
+          args=(--check-only)
+          if [ -n "$INPUT_EDITION" ]; then args+=(--edition "$INPUT_EDITION"); fi
+          if [ "$INPUT_FORCE" = "true" ]; then args+=(--force); fi
+          npx tsx pipeline/run.ts "${args[@]}"
+
+      - name: Resolve model and voice
+        id: settings
+        if: steps.precheck.outputs.proceed == 'true'
+        run: |
+          MODEL="${INPUT_MODEL:-$(node -p "require('./config/editorial.json').model || 'qwen3:4b-instruct'")}"
+          VOICE="$(node -p "require('./config/editorial.json').voice || 'en_US-lessac-medium'")"
+          [[ "$MODEL" =~ ^[A-Za-z0-9._:/-]+$ ]] || { echo "::error::invalid model name"; exit 1; }
+          [[ "$VOICE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::invalid voice name"; exit 1; }
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+          echo "voice=$VOICE" >> "$GITHUB_OUTPUT"
+          echo "Model: $MODEL  Voice: $VOICE"
+
+      # Fail fast on a broken frontend before spending minutes on inference.
+      - name: Build frontend
+        if: steps.precheck.outputs.proceed == 'true'
+        run: npm run build
+
+      - name: Restore Ollama model cache
+        id: model-cache
+        if: steps.precheck.outputs.proceed == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.ollama/models
+          key: ollama-models-${{ steps.settings.outputs.model }}-v1
+
+      - name: Install Ollama
+        if: steps.precheck.outputs.proceed == 'true'
+        run: |
+          start=$(date +%s)
+          curl -fsSL https://ollama.com/install.sh | sh
+          # The installer registers a systemd service running as another user with
+          # its own model directory; stop it and run our own server instead.
+          sudo systemctl stop ollama 2>/dev/null || true
+          sudo systemctl disable ollama 2>/dev/null || true
+          secs=$(( $(date +%s) - start ))
+          echo "OLLAMA_INSTALL_SECONDS=$secs" >> "$GITHUB_ENV"
+          echo "ollama_install_seconds=$secs" >> .work/timings.txt
+          ollama --version
+
+      - name: Start Ollama and pull the model
+        if: steps.precheck.outputs.proceed == 'true'
+        env:
+          MODEL: ${{ steps.settings.outputs.model }}
+          CACHE_HIT: ${{ steps.model-cache.outputs.cache-hit == 'true' }}
+        run: |
+          OLLAMA_KEEP_ALIVE=60m nohup ollama serve > .work/ollama.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:11434/api/tags > /dev/null; then break; fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:11434/api/tags > /dev/null || { echo "::error::Ollama did not start"; tail -50 .work/ollama.log; exit 1; }
+          start=$(date +%s)
+          ollama pull "$MODEL"
+          pull=$(( $(date +%s) - start ))
+          start=$(date +%s)
+          # An empty prompt loads the model into memory without generating.
+          curl -sf http://127.0.0.1:11434/api/generate -d "{\"model\":\"$MODEL\",\"prompt\":\"\",\"keep_alive\":\"60m\"}" > /dev/null
+          load=$(( $(date +%s) - start ))
+          {
+            echo "MODEL_PULL_SECONDS=$pull"
+            echo "MODEL_LOAD_SECONDS=$load"
+            echo "MODEL_CACHE_HIT=$CACHE_HIT"
+          } >> "$GITHUB_ENV"
+          {
+            echo "model_pull_seconds=$pull (cache hit: $CACHE_HIT)"
+            echo "model_load_seconds=$load"
+          } >> .work/timings.txt
+          du -sh ~/.ollama/models | tee -a .work/timings.txt
+
+      - name: Save Ollama model cache
+        if: steps.precheck.outputs.proceed == 'true' && steps.model-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.ollama/models
+          key: ollama-models-${{ steps.settings.outputs.model }}-v1
+
+      - uses: actions/setup-python@v5
+        if: steps.precheck.outputs.proceed == 'true'
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/requirements-tts.txt
+
+      - name: Install Piper
+        if: steps.precheck.outputs.proceed == 'true'
+        run: |
+          start=$(date +%s)
+          python -m pip install -r scripts/requirements-tts.txt
+          secs=$(( $(date +%s) - start ))
+          echo "PIPER_INSTALL_SECONDS=$secs" >> "$GITHUB_ENV"
+          echo "piper_install_seconds=$secs" >> .work/timings.txt
+
+      - name: Restore Piper voice cache
+        id: voice-cache
+        if: steps.precheck.outputs.proceed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .work/voices
+          key: piper-voice-${{ steps.settings.outputs.voice }}-v1
+
+      - name: Download Piper voice
+        if: steps.precheck.outputs.proceed == 'true' && steps.voice-cache.outputs.cache-hit != 'true'
+        env:
+          VOICE: ${{ steps.settings.outputs.voice }}
+        run: |
+          mkdir -p .work/voices
+          start=$(date +%s)
+          python -m piper.download_voices "$VOICE" --data-dir .work/voices
+          secs=$(( $(date +%s) - start ))
+          echo "VOICE_DOWNLOAD_SECONDS=$secs" >> "$GITHUB_ENV"
+          echo "voice_download_seconds=$secs" >> .work/timings.txt
+          ls -la .work/voices
+
+      - name: Check FFmpeg
+        if: steps.precheck.outputs.proceed == 'true'
+        run: |
+          if ! ffmpeg -version > /dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y ffmpeg
+          fi
+          ffmpeg -version | head -1
+
+      - name: Fetch state from the state branch
+        if: steps.precheck.outputs.proceed == 'true'
+        run: |
+          mkdir -p .work/state
+          set +e
+          git ls-remote --exit-code --heads origin state > /dev/null
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            git fetch --depth=1 origin state
+            git show FETCH_HEAD:state.json > .work/state/state.json
+            echo "Loaded state.json ($(wc -c < .work/state/state.json) bytes)"
+          elif [ "$rc" -eq 2 ]; then
+            echo "No state branch yet; starting from empty state."
+          else
+            echo "::error::Could not query the state branch (git exit $rc)"
+            exit 1
+          fi
+
+      - name: Run the edition pipeline
+        id: run
+        if: steps.precheck.outputs.proceed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL: ${{ steps.settings.outputs.model }}
+          PIPER_VOICE: ${{ steps.settings.outputs.voice }}
+          PIPER_DATA_DIR: ${{ github.workspace }}/.work/voices
+          PIPER_VOICES_DIR: ${{ github.workspace }}/.work/voices
+          FORCE_FALLBACK: ${{ inputs.force_fallback && '1' || '' }}
+          FORCE_NO_AUDIO: ${{ inputs.force_no_audio && '1' || '' }}
+          # Repository variable; set to 1 only to deliberately start a new archive (see docs/OPERATIONS.md).
+          ALLOW_EMPTY_ARCHIVE: ${{ vars.ALLOW_EMPTY_ARCHIVE }}
+        run: |
+          args=(--site-dir .work/site --state-file .work/state/state.json --next-state-file .work/state/next-state.json --model "$MODEL")
+          if [ -n "$INPUT_EDITION" ]; then args+=(--edition "$INPUT_EDITION"); fi
+          if [ "$INPUT_FORCE" = "true" ]; then args+=(--force); fi
+          if [ "$INPUT_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          npx tsx pipeline/run.ts "${args[@]}"
+
+      - name: Add the frontend to the site
+        if: steps.run.outputs.status == 'published' || steps.run.outputs.status == 'dry-run'
+        env:
+          SITE_DIR: ${{ steps.run.outputs.site_dir }}
+        run: |
+          # Pipeline output wins over anything the frontend build shipped under data/.
+          rm -rf dist/data dist/feed.xml
+          cp -R dist/. "$SITE_DIR/"
+          ls -la "$SITE_DIR"
+
+      - name: Scan for credentials
+        if: steps.run.outputs.status == 'published' || steps.run.outputs.status == 'dry-run'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE_DIR: ${{ steps.run.outputs.site_dir }}
+          NEXT_STATE: ${{ steps.run.outputs.next_state_file }}
+        run: npx tsx scripts/check-secrets.ts dist "$SITE_DIR" "$NEXT_STATE"
+
+      - name: Upload edition recovery copy
+        if: steps.run.outputs.deploy == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: edition-${{ steps.run.outputs.edition }}
+          path: |
+            .work/site/data/editions/${{ steps.run.outputs.edition }}/
+            .work/site/data/manifest.json
+            .work/site/data/run-summary.json
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload dry-run output
+        if: steps.run.outputs.status == 'dry-run'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-run-${{ steps.run.outputs.edition }}-${{ github.run_attempt }}
+          path: .work/dry-run/
+          retention-days: 7
+
+      - name: Upload next state
+        if: steps.run.outputs.deploy == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-state
+          path: .work/state/next-state.json
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Configure Pages
+        if: steps.run.outputs.deploy == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: steps.run.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .work/site
+
+      - name: Measurements
+        if: always()
+        env:
+          SITE_DIR: ${{ steps.run.outputs.site_dir }}
+          EDITION: ${{ steps.run.outputs.edition }}
+        run: |
+          peak=$( [ -s .work/mem-used-mb.log ] && sort -n .work/mem-used-mb.log | tail -1 || echo n/a )
+          total=$(( $(date +%s) - ${RUN_STARTED_AT:-$(date +%s)} ))
+          site_size=n/a; mp3_size=n/a
+          if [ -n "$SITE_DIR" ] && [ -d "$SITE_DIR" ]; then
+            site_size=$(du -sh "$SITE_DIR" | cut -f1)
+            mp3="$SITE_DIR/data/editions/$EDITION/audio.mp3"
+            if [ -f "$mp3" ]; then mp3_size="$(stat -c %s "$mp3") bytes"; fi
+          fi
+          summary_json="$SITE_DIR/data/run-summary.json"
+          read_metric() { [ -f "$summary_json" ] && node -e "const s=require(process.argv[1]); const v=$1; console.log(v ?? 'n/a')" "$(realpath "$summary_json")" || echo n/a; }
+          {
+            echo "## Runner measurements"
+            echo ""
+            echo "| Measurement | Value |"
+            echo "|---|---|"
+            echo "| Ollama install (s) | ${OLLAMA_INSTALL_SECONDS:-n/a} |"
+            echo "| Model pull (s) | ${MODEL_PULL_SECONDS:-n/a} (cache hit: ${MODEL_CACHE_HIT:-n/a}) |"
+            echo "| Model load (s) | ${MODEL_LOAD_SECONDS:-n/a} |"
+            echo "| Piper install (s) | ${PIPER_INSTALL_SECONDS:-n/a} |"
+            echo "| Voice download (s) | ${VOICE_DOWNLOAD_SECONDS:-cached} |"
+            echo "| Inference (s) | $(read_metric 's.metrics?.inferenceSeconds') |"
+            echo "| Tokens / s | $(read_metric 's.metrics?.tokensPerSecond') |"
+            echo "| Piper synthesis (s) | $(read_metric 's.metrics?.audioSeconds') |"
+            echo "| GitHub API requests | $(read_metric 's.metrics?.githubRequests') |"
+            echo "| GitHub rate remaining | $(read_metric 's.metrics?.githubRateRemaining') |"
+            echo "| Job wall clock (s) | $total |"
+            echo "| Peak used memory, whole runner (MB, free -m, 5 s samples) | $peak |"
+            echo "| Published site size | $site_size |"
+            echo "| MP3 size | $mp3_size |"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          [ -f .work/timings.txt ] && cat .work/timings.txt || true
+
+      - name: Upload run diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .work/mem-used-mb.log
+            .work/vmstat.log
+            .work/timings.txt
+          retention-days: 7
+          if-no-files-found: ignore
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # State advances only after the site that reflects it is live (D2).
+  commit-state:
+    needs: [build, deploy]
+    if: needs.build.outputs.deploy == 'true' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-state
+          path: ${{ runner.temp }}/next-state
+
+      - name: Commit state.json to the state branch (single amended commit)
+        env:
+          EDITION: ${{ needs.build.outputs.edition }}
+          GIT_AUTHOR_NAME: Pauloes Berhe
+          GIT_AUTHOR_EMAIL: pauloes@btechs.io
+          GIT_COMMITTER_NAME: Pauloes Berhe
+          GIT_COMMITTER_EMAIL: pauloes@btechs.io
+        run: |
+          src="$RUNNER_TEMP/next-state/next-state.json"
+          node -e "const s=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')); if (s.schemaVersion !== 1) process.exit(1)" "$src"
+          git checkout --orphan state-tmp
+          git rm -rf --quiet .
+          git clean -fdxq
+          cp "$src" state.json
+          git add state.json
+          git commit --quiet -m "chore(state): after edition ${EDITION}"
+          git log --format='%an <%ae> | %cn <%ce>' -1
+          git push --force origin HEAD:state
