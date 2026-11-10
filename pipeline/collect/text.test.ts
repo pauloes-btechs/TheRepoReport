@@ -53,3 +53,12 @@ describe('parseNextLink', () => {
     expect(parseNextLink(null)).toBeUndefined();
   });
 });
+
+describe('credential-shaped text in untrusted input', () => {
+  it('is redacted at collection so the publish-time scan cannot be tripped by a PR title', async () => {
+    const { sanitizeTitle, sanitizeText } = await import('./text');
+    const token = `ghp_${'A'.repeat(36)}`;
+    expect(sanitizeTitle(`docs: fix typo ${token}`)).toBe('docs: fix typo [REDACTED]');
+    expect(sanitizeText(`curl -H "Authorization: Bearer ${'x'.repeat(40)}"`)).not.toMatch(/x{20}/);
+  });
+});

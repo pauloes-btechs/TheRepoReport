@@ -11,6 +11,9 @@ export const SCHEMA_VERSION = 1;
 
 // ───────────────────────── Configuration ─────────────────────────
 
+/** Only https links are published; rules out javascript:, data: and plain http. */
+export const HttpsUrl = z.string().url().regex(/^https:\/\//, 'expected an https:// URL');
+
 export const RepoSlug = z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/, 'expected "owner/name"');
 
 export const WatchedRepo = z.object({
@@ -87,7 +90,7 @@ export const RawEvent = z.object({
   title: z.string(),
   /** Body text, already truncated by the collector. Untrusted. */
   body: z.string().default(''),
-  url: z.string().url(),
+  url: HttpsUrl,
   author: z.string().optional(),
   labels: z.array(z.string()).default([]),
   state: z.enum(['open', 'closed', 'merged', 'published']),
@@ -135,7 +138,7 @@ export const Story = z.object({
   events: z.array(RawEvent).min(1),
   status: DevStatus,
   /** URL of the evidence that justifies `status`. */
-  statusEvidenceUrl: z.string().url(),
+  statusEvidenceUrl: HttpsUrl,
   categories: z.array(z.string()).default([]),
   firstSeen: z.string(),
   updatedAt: z.string(),
@@ -165,7 +168,7 @@ export const ScoreSignal = z.object({
   points: z.number(),
   /** Human-readable reason, e.g. "Advisory rated high severity". */
   reason: z.string(),
-  evidenceUrl: z.string().url().optional(),
+  evidenceUrl: HttpsUrl.optional(),
 });
 
 export const ScoreDimension = z.object({
@@ -272,13 +275,13 @@ export const ReportStory = z.object({
   id: z.string(),
   repo: RepoSlug,
   status: DevStatus,
-  statusEvidenceUrl: z.string().url(),
+  statusEvidenceUrl: HttpsUrl,
   /** Set when this story was covered before and its status has advanced. */
   previousStatus: DevStatus.optional(),
   categories: z.array(z.string()),
   score: ScoreBreakdown,
   explanation: Explanation,
-  links: z.array(z.object({ label: z.string(), url: z.string().url(), kind: EventKind })),
+  links: z.array(z.object({ label: z.string(), url: HttpsUrl, kind: EventKind })),
   updatedAt: z.string(),
 });
 export type ReportStory = z.infer<typeof ReportStory>;
@@ -286,7 +289,7 @@ export type ReportStory = z.infer<typeof ReportStory>;
 export const WatchItem = z.object({
   title: z.string(),
   repo: RepoSlug,
-  url: z.string().url(),
+  url: HttpsUrl,
   status: DevStatus,
   note: z.string(),
 });

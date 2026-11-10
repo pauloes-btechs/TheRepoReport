@@ -45,10 +45,10 @@ on:
         required: false
         default: ''
 
+# Least privilege: the build job handles untrusted GitHub content and runs
+# installers, so it only reads. Write scopes are granted per job below.
 permissions:
-  contents: write   # push the `state` branch
-  pages: write      # deploy to GitHub Pages
-  id-token: write   # OIDC for deploy-pages
+  contents: read
 
 concurrency:
   group: edition
@@ -71,6 +71,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Start memory sampling
         run: |
@@ -248,11 +249,15 @@ jobs:
           FORCE_FALLBACK: ${{ inputs.force_fallback && '1' || '' }}
           FORCE_NO_AUDIO: ${{ inputs.force_no_audio && '1' || '' }}
           INPUT_REPLAY_HOURS: ${{ inputs.replay_hours }}
+          # The key the precheck resolved; reusing it means a run that starts near a slot
+          # boundary publishes the edition that was checked for duplicates.
+          PRECHECK_EDITION: ${{ steps.precheck.outputs.edition }}
           # Repository variable; set to 1 only to deliberately start a new archive (see docs/OPERATIONS.md).
           ALLOW_EMPTY_ARCHIVE: ${{ vars.ALLOW_EMPTY_ARCHIVE }}
         run: |
           args=(--site-dir .work/site --state-file .work/state/state.json --next-state-file .work/state/next-state.json --model "$MODEL")
-          if [ -n "$INPUT_EDITION" ]; then args+=(--edition "$INPUT_EDITION"); fi
+          edition="${INPUT_EDITION:-$PRECHECK_EDITION}"
+          if [ -n "$edition" ]; then args+=(--edition "$edition"); fi
           if [ "$INPUT_FORCE" = "true" ]; then args+=(--force); fi
           if [ "$INPUT_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
           if [ -n "$INPUT_REPLAY_HOURS" ]; then
@@ -307,10 +312,6 @@ jobs:
           path: .work/state/next-state.json
           retention-days: 1
           if-no-files-found: error
-
-      - name: Configure Pages
-        if: steps.run.outputs.deploy == 'true'
-        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         if: steps.run.outputs.deploy == 'true'
@@ -373,10 +374,16 @@ jobs:
     if: needs.build.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      pages: write      # deploy to GitHub Pages
+      id-token: write   # OIDC for deploy-pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
@@ -387,6 +394,8 @@ jobs:
     if: needs.build.outputs.deploy == 'true' && needs.deploy.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write   # push the `state` branch (only this job can write)
     steps:
       - uses: actions/checkout@v4
         with:

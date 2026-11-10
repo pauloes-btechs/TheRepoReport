@@ -4,6 +4,7 @@
  * the deterministic stages collected.
  */
 import { LlmExplanation, STATUS_ORDER, type DevStatus, type ScoredStory } from '../../shared/schemas';
+import { SECRET_PATTERNS } from '../util/redact';
 import { evidenceCorpus, evidenceUrls, normalizeUrl } from './evidence';
 
 export interface ValidationResult {
@@ -52,6 +53,14 @@ export function textFields(x: LlmExplanation): { field: string; text: string }[]
 }
 
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"'`)\]]+/gi;
+/** Defanged links ("hxxps://", "example[.]com") are never legitimate in our output. */
+const DEFANGED_RE = /\bhxxps?:\/\/|\[\.\]|\(\.\)|\[dot\]/i;
+/**
+ * Bare domains such as "evil-mirror.example.net/install". Limited to common
+ * TLDs so file names (README.md, next.js, install.sh) are not mistaken for hosts.
+ */
+const BARE_DOMAIN_RE =
+  /(?<![\w@/.-])((?:[a-z0-9-]+\.)+(?:com|net|org|io|dev|app|co|ai|xyz|info|biz|cloud|site|online|ru|cn|tk|top|link|page|gg|me|us|uk|de))(?![\w-])(?:\/[^\s<>"'`)\]]*)?/gi;
 const VERSION_RE = /(?<![\w.])v?(\d+\.\d+(?:\.\d+)?)(?![\d])/gi;
 const CVE_RE = /\bCVE-\d{4}-\d{4,}\b/gi;
 const GHSA_RE = /\bGHSA(?:-[0-9a-z]{4}){3}\b/gi;
@@ -70,13 +79,28 @@ function monthIndex(name: string): number {
   return MONTHS.findIndex((m) => m.startsWith(lower));
 }
 
+function hostOf(url: string): string | undefined {
+  try {
+    return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return undefined;
+  }
+}
+
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Words that, shortly before a status verb, make the sentence negated or hypothetical. */
+/**
+ * Words that, immediately before a status verb, make the claim negated,
+ * conditional or future ("has not been released", "once it is released").
+ * Deliberately excludes words like "no", "can", "after" that occur in
+ * affirmative claims ("with no setup, it is now available").
+ */
 const HEDGE_RE =
-  /\b(not|n't|never|no|yet|until|unless|once|when|whenever|if|before|after|will|would|could|might|may|can't|cannot|awaiting|pending|eventually|expected|planned|proposed|hopes?|aims?|wants?|to be)\b|n't\b/i;
+  /\b(not|never|yet|until|unless|once|when|whenever|if|before|will|would|could|might|may|cannot|awaiting|pending|eventually|expected|planned|proposed|to be)\b|n't\b/i;
+/** How many words before a claim are checked for a hedge. */
+const HEDGE_WORDS = 4;
 
 /** Claim patterns per status level, and the minimum classified status that allows them. */
 const STATUS_CLAIMS: { min: DevStatus; label: string; re: RegExp }[] = [
@@ -88,7 +112,7 @@ const STATUS_CLAIMS: { min: DevStatus; label: string; re: RegExp }[] = [
   {
     min: 'released',
     label: 'released / available',
-    re: /\b(released|now available|available now|is available|are available|generally available|out now|is live|went live|now live|shipped|ships|rolled out|you can now (?:download|upgrade|install|update|use|get)|available to (?:download|install|users|everyone)|ready to (?:download|install)|in the latest release|new release is out)\b/gi,
+    re: /\b(released|now available|available now|is available|are available|generally available|out now|is live|went live|now live|shipped|ships|rolled out|you can now (?:download|upgrade|install|update|use|get)|available to (?:download|install|users|everyone)|ready to (?:download|install)|in the latest release|new release is out|(?:install|download|use|try) it (?:out )?(?:today|now)|(?:in|part of) the (?:newest|latest) version|can (?:now )?(?:download|install|upgrade to|update to) (?:it|the new version|version))\b/gi,
   },
   {
     min: 'merged',
@@ -106,8 +130,8 @@ function isHedged(text: string, index: number): boolean {
     text.lastIndexOf(';', index - 1),
     text.lastIndexOf(':', index - 1),
   );
-  const windowStart = Math.max(sentenceStart + 1, index - 48);
-  return HEDGE_RE.test(text.slice(windowStart, index));
+  const before = text.slice(sentenceStart + 1, index).trim().split(/\s+/).slice(-HEDGE_WORDS).join(' ');
+  return HEDGE_RE.test(before);
 }
 
 const INJECTION_PATTERNS: { label: string; re: RegExp }[] = [
@@ -168,6 +192,9 @@ export function validateExplanation(raw: unknown, story: ScoredStory): Validatio
 export function checkAgainstEvidence(x: LlmExplanation, story: ScoredStory): string[] {
   const issues: string[] = [];
   const allowedUrls = evidenceUrls(story);
+  const allowedHosts = new Set(
+    ['github.com', ...[...allowedUrls].map((u) => hostOf(u))].filter((h): h is string => !!h),
+  );
   const corpus = evidenceCorpus(story);
   const corpusLower = corpus.toLowerCase();
   const corpusIsoDates = new Set(corpus.match(/\d{4}-\d{2}-\d{2}/g) ?? []);
@@ -191,6 +218,15 @@ export function checkAgainstEvidence(x: LlmExplanation, story: ScoredStory): str
     }
     // Remove URLs before scanning for versions/dates so their path segments are not double-counted.
     const plain = text.replace(URL_RE, ' ');
+
+    if (DEFANGED_RE.test(plain)) add(`${field}: contains an obfuscated link; remove it.`);
+    for (const m of plain.matchAll(BARE_DOMAIN_RE)) {
+      const host = m[1]!.toLowerCase().replace(/^www\./, '');
+      if (!allowedHosts.has(host)) add(`${field}: mentions a web address that is not in the evidence; remove it.`);
+    }
+    for (const pattern of SECRET_PATTERNS) {
+      if (new RegExp(pattern.regex.source, 'i').test(text)) add(`${field}: contains a credential-like string; remove it.`);
+    }
 
     for (const m of plain.matchAll(VERSION_RE)) {
       const token = m[1]!;
