@@ -100,7 +100,8 @@ export async function explainStoriesWith(
 
   const remainingMs = () => budgetMs - (clock() - start);
 
-  const ask = async (messages: ChatMessage[]) => {
+  const ask = async (messages: ChatMessage[], storyId: string) => {
+    const began = clock();
     const response = await chat({
       baseUrl,
       model,
@@ -113,6 +114,16 @@ export async function explainStoriesWith(
       evalTokens += response.evalCount;
       evalNanos += response.evalDuration;
     }
+    const secs = (ns?: number) => (ns ? Math.round(ns / 1e8) / 10 : undefined);
+    logger.info('Model call', {
+      story: storyId,
+      seconds: Math.round((clock() - began) / 100) / 10,
+      promptTokens: response.promptEvalCount,
+      promptSeconds: secs(response.promptEvalDuration),
+      outputTokens: response.evalCount,
+      outputSeconds: secs(response.evalDuration),
+      loadSeconds: secs(response.loadDuration),
+    });
     return response.content;
   };
 
@@ -132,7 +143,7 @@ export async function explainStoriesWith(
 
     const messages = buildMessages(story, { instructions, exemplars });
     try {
-      const first = await ask(messages);
+      const first = await ask(messages, story.id);
       let result = validateExplanation(first, story);
       const notes: string[] = [];
       if (!result.ok) {
@@ -142,7 +153,7 @@ export async function explainStoriesWith(
           out.push(fallbackFor(story, [...notes, 'The inference budget ran out before a retry.']));
           continue;
         }
-        const second = await ask([...messages, { role: 'assistant', content: first }, buildRetryMessage(result.issues)]);
+        const second = await ask([...messages, { role: 'assistant', content: first }, buildRetryMessage(result.issues)], story.id);
         result = validateExplanation(second, story);
         if (!result.ok) {
           logger.warn('Retry rejected; using fallback', { story: story.id, issues: result.issues });

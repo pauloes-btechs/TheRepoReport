@@ -82,6 +82,7 @@ async function main(): Promise<number> {
     infra: infraFromEnv(process.env),
     ...(args.edition ? { editionOverride: args.edition } : {}),
     ...(args.model ? { model: args.model } : {}),
+    ...(args.replayHours ? { replayHours: Number(args.replayHours) } : {}),
     ...(token ? { token } : {}),
     ...(process.env.OLLAMA_URL ? { ollamaUrl: process.env.OLLAMA_URL } : {}),
     ...(process.env.PIPER_VOICE ? { voice: process.env.PIPER_VOICE } : {}),

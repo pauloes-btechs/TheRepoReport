@@ -28,6 +28,7 @@ import type {
 import { parseEditionKey, resolveEdition, type ResolvedEdition } from '../../shared/edition';
 import {
   AudioInfo,
+  emptyState,
   EditionReport,
   type Manifest,
   type PipelineState,
@@ -81,6 +82,11 @@ export interface RunEditionOptions {
   dryRun?: boolean;
   /** Ollama model override. */
   model?: string;
+  /**
+   * Dry runs only: ignore saved cursors and story history and re-collect the
+   * last N hours, to calibrate scoring on a realistic window.
+   */
+  replayHours?: number;
   forceFallback?: boolean;
   forceNoAudio?: boolean;
   allowEmptyArchive?: boolean;
@@ -94,6 +100,16 @@ export interface RunEditionOptions {
   archiveRetryDelayMs?: number;
   /** Timings measured by the workflow outside Node (Ollama install, model pull, ...). */
   infra?: Record<string, number | string | boolean>;
+}
+
+export interface CandidateRow {
+  repo: string;
+  title: string;
+  status: string;
+  total: number;
+  /** Awarded points per dimension, in rubric order. */
+  dims: Record<string, number>;
+  outcome: string;
 }
 
 export type RunStatus = 'published' | 'dry-run' | 'skipped' | 'failed';
@@ -112,6 +128,8 @@ export interface RunSummary {
   storyCount?: number;
   watchingCount?: number;
   skippedCount?: number;
+  /** Highest-scoring candidates with their outcome, for calibrating the rubric. */
+  candidates?: CandidateRow[];
   carriedEditions?: string[];
   droppedEditions?: string[];
   failedRepos?: { repo: string; reason: string }[];
@@ -198,7 +216,10 @@ export async function runEdition(deps: EditionDeps, opts: RunEditionOptions): Pr
 
     // 2. Config and state.
     const config: ProductionConfig = await stage('config', () => loadConfig(opts.configDir ?? 'config'));
-    const state: PipelineState = await stage('state', () => loadState(opts.stateFile));
+    if (opts.replayHours !== undefined && !dryRun) throw new Error('replayHours is only allowed with a dry run');
+    const state: PipelineState = await stage('state', async () =>
+      opts.replayHours !== undefined ? emptyState() : loadState(opts.stateFile),
+    );
 
     // 3. Live archive: duplicate guard and first-run rule.
     const fetchOpts = {
@@ -241,6 +262,7 @@ export async function runEdition(deps: EditionDeps, opts: RunEditionOptions): Pr
         state,
         now,
         logger,
+        ...(opts.replayHours !== undefined ? { initialLookbackHours: opts.replayHours } : {}),
         ...(opts.token ? { token: opts.token } : {}),
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
       }),
@@ -402,6 +424,7 @@ export async function runEdition(deps: EditionDeps, opts: RunEditionOptions): Pr
         storyCount: report.stories.length,
         watchingCount: report.worthWatching.length,
         skippedCount: selection.skipped.length,
+        candidates: candidateRows(selection),
         audio: {
           available: report.audio.available,
           ...(report.audio.bytes !== undefined ? { bytes: report.audio.bytes } : {}),
@@ -469,4 +492,24 @@ export async function checkPublished(opts: {
 
 async function writeJson(path: string, value: unknown): Promise<void> {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+/** Top candidates by score with what happened to each, so threshold and rubric can be tuned from real runs. */
+function candidateRows(selection: Selection, limit = 20): CandidateRow[] {
+  const rows = [
+    ...selection.selected.map((story) => ({ story, outcome: 'selected' })),
+    ...selection.watching.map((story) => ({ story, outcome: 'watching' })),
+    ...selection.skipped.map(({ story, reason }) => ({ story, outcome: `skipped: ${reason}` })),
+  ];
+  return rows
+    .sort((a, b) => b.story.score.total - a.story.score.total)
+    .slice(0, limit)
+    .map(({ story, outcome }) => ({
+      repo: story.repo,
+      title: story.title.slice(0, 80),
+      status: story.status,
+      total: story.score.total,
+      dims: Object.fromEntries(story.score.dimensions.map((d) => [d.key, d.awarded])),
+      outcome,
+    }));
 }

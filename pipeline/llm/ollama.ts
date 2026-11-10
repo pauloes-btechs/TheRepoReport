@@ -22,6 +22,9 @@ export interface ChatResponse {
   evalDuration?: number;
   /** Nanoseconds. */
   loadDuration?: number;
+  promptEvalCount?: number;
+  /** Nanoseconds. */
+  promptEvalDuration?: number;
 }
 
 export class OllamaError extends Error {
@@ -132,6 +135,8 @@ export async function chat(opts: ChatRequestOptions): Promise<ChatResponse> {
       eval_count?: number;
       eval_duration?: number;
       load_duration?: number;
+      prompt_eval_count?: number;
+      prompt_eval_duration?: number;
       error?: string;
     };
     if (json.error) throw new OllamaError(`Ollama error: ${json.error}`, 'http');
@@ -141,6 +146,8 @@ export async function chat(opts: ChatRequestOptions): Promise<ChatResponse> {
       evalCount: json.eval_count,
       evalDuration: json.eval_duration,
       loadDuration: json.load_duration,
+      promptEvalCount: json.prompt_eval_count,
+      promptEvalDuration: json.prompt_eval_duration,
     };
   } catch (err) {
     if (err instanceof OllamaError) throw err;
