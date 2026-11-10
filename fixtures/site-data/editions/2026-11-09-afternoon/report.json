@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "key": "2026-11-09-afternoon",
+  "date": "2026-11-09",
+  "edition": "afternoon",
+  "generatedAt": "2026-11-09T18:24:00Z",
+  "windowStart": "2026-11-09T12:20:00Z",
+  "windowEnd": "2026-11-09T18:15:20Z",
+  "summarization": "llm",
+  "model": "qwen3:4b-instruct",
+  "quiet": true,
+  "stories": [],
+  "worthWatching": [
+    {
+      "title": "RFC: streaming tool calls in the API",
+      "repo": "ollama/ollama",
+      "url": "https://github.com/ollama/ollama/issues/12001",
+      "status": "proposed",
+      "note": "Proposal under discussion; no code yet."
+    }
+  ],
+  "transcript": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "title": "Good afternoon",
+      "text": "Good afternoon. This is TheRepoReport for Monday, November 9.",
+      "spokenText": "Good afternoon. This is TheRepoReport for Monday, November 9."
+    },
+    {
+      "id": "closing",
+      "kind": "closing",
+      "title": "A quiet period",
+      "text": "Nothing on your watchlist cleared the reporting threshold since this morning, so there are no headlines this time. The next edition is at 7:15 PM Eastern.",
+      "spokenText": "Nothing on your watchlist cleared the reporting threshold since this morning, so there are no headlines this time. The next edition is at 7:15 PM Eastern."
+    }
+  ],
+  "audio": {
+    "available": true,
+    "file": "audio.mp3",
+    "bytes": 150379,
+    "durationSec": 75,
+    "voice": "en_US-lessac-medium",
+    "chapters": [
+      {
+        "id": "intro",
+        "title": "Good afternoon",
+        "startSec": 0
+      },
+      {
+        "id": "closing",
+        "title": "A quiet period",
+        "startSec": 8
+      }
+    ]
+  },
+  "metrics": {
+    "githubRequests": 96,
+    "githubRateRemaining": 904,
+    "reposScanned": 23,
+    "eventsCollected": 7,
+    "storiesConsidered": 3,
+    "modelLoadSeconds": 2.1,
+    "inferenceSeconds": 18.4,
+    "tokensPerSecond": 10.2,
+    "audioSeconds": 9.1,
+    "totalSeconds": 312,
+    "peakMemoryMb": 3900
+  }
+}
