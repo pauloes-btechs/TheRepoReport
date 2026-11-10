@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "topics": [
+    "bitcoin",
+    "defi",
+    "ai",
+    "security",
+    "payments",
+    "developer-tools"
+  ],
+  "weights": {
+    "security": 25,
+    "breaking": 20,
+    "capability": 20,
+    "reliability": 15,
+    "ecosystem": 10,
+    "relevance": 10
+  },
+  "minScore": 35,
+  "maxStories": 8,
+  "targetMinutes": {
+    "min": 5,
+    "max": 12
+  },
+  "retentionDays": 7,
+  "voice": "kokoro:bm_george|af_heart",
+  "model": "qwen3:4b-instruct",
+  "inferenceBudgetSeconds": 1200,
+  "lexicon": {
+    "GitHub": "git hub",
+    "CVE": "C V E",
+    "API": "A P I",
+    "CLI": "C L I",
+    "PR": "pull request",
+    "lnd": "L N D",
+    "OAuth": "oh auth",
+    "SQL": "sequel",
+    "UI": "U I",
+    "npm": "N P M",
+    "AI": "A I",
+    "GPU": "G P U",
+    "ID": "I D"
+  }
+}

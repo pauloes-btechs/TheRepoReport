@@ -6,15 +6,14 @@
   "repos": [
     { "repo": "bitcoin/bitcoin", "category": "Bitcoin", "priority": 3, "enabled": true, "topics": ["bitcoin", "security"] },
     { "repo": "lightningnetwork/lnd", "category": "Bitcoin", "priority": 2, "enabled": true, "topics": ["bitcoin", "lightning"] },
-    { "repo": "vexl-it/vexl", "category": "Bitcoin", "priority": 2, "enabled": true, "topics": ["bitcoin", "p2p"] },
-    { "repo": "ethereum/go-ethereum", "category": "DeFi", "priority": 2, "enabled": true, "topics": ["defi", "ethereum"] },
-    { "repo": "Uniswap/v4-core", "category": "DeFi", "priority": 2, "enabled": true, "topics": ["defi"] },
-    { "repo": "ollama/ollama", "category": "AI", "priority": 3, "enabled": true, "topics": ["ai", "local-inference"] },
     { "repo": "anthropics/claude-code", "category": "AI", "priority": 3, "enabled": true, "topics": ["ai", "developer-tools"] },
-    { "repo": "OHF-Voice/piper1-gpl", "category": "AI", "priority": 1, "enabled": true, "topics": ["ai", "speech"] },
-    { "repo": "supabase/supabase", "category": "Infrastructure", "priority": 2, "enabled": true, "topics": ["database", "backend"] },
-    { "repo": "vercel/next.js", "category": "Web", "priority": 2, "enabled": true, "topics": ["web", "frontend"] },
-    { "repo": "facebook/react", "category": "Web", "priority": 2, "enabled": true, "topics": ["web", "frontend"] },
-    { "repo": "vitejs/vite", "category": "Web", "priority": 1, "enabled": true, "topics": ["web", "tooling"] }
+    { "repo": "lightninglabs/neutrino", "category": "Bitcoin, lightning", "priority": 2, "enabled": true, "topics": [] },
+    { "repo": "lightninglabs/loop", "category": "Bitcoin, lightning", "priority": 2, "enabled": true, "topics": [] },
+    { "repo": "lightninglabs/pool", "category": "Bitcoin, lightning", "priority": 2, "enabled": true, "topics": [] },
+    { "repo": "lightninglabs/taproot-assets", "category": "Bitcoin, lightning", "priority": 2, "enabled": true, "topics": [] },
+    { "repo": "lightninglabs/wavelength", "category": "Bitcoin, lightning", "priority": 3, "enabled": true, "topics": [] },
+    { "repo": "lightninglabs/wavelength-btcpay", "category": "Bitcoin, lightning", "priority": 2, "enabled": true, "topics": [] },
+    { "repo": "bitcoin/bips", "category": "Bitcoin, updates", "priority": 2, "enabled": true, "topics": [] },
+    { "repo": "lightninglabs/layertree", "category": "Bitcoin, security", "priority": 3, "enabled": true, "topics": [] }
   ]
 }
