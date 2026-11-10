@@ -23,7 +23,7 @@
     "max": 12
   },
   "retentionDays": 7,
-  "voice": "en_US-lessac-medium",
+  "voice": "en_US-ljspeech-high",
   "model": "qwen3:4b-instruct",
   "fallbackModel": "qwen3:1.7b",
   "inferenceBudgetSeconds": 1200,

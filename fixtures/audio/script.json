@@ -1,0 +1,53 @@
+[
+  {
+    "id": "intro",
+    "kind": "intro",
+    "title": "Good morning",
+    "text": "Good morning, this is TheRepoReport Morning Edition.",
+    "spokenText": "Good morning, this is The Repo Report, Morning Edition."
+  },
+  {
+    "id": "headlines",
+    "kind": "headlines",
+    "title": "Top headlines",
+    "text": "A critical fix in example/tiny and a new release of example/big.",
+    "spokenText": "A critical fix in example tiny,\nand a new release of example big."
+  },
+  {
+    "id": "lead",
+    "kind": "lead",
+    "title": "Critical advisory patched in example/tiny",
+    "text": "example/tiny fixed CVE-2026-0001 in v1.2.3.",
+    "spokenText": "Example tiny fixed C V E 2026 0001 in version 1 point 2 point 3.",
+    "storyId": "story-tiny-advisory"
+  },
+  {
+    "id": "story-2",
+    "kind": "story",
+    "title": "example/big ships v2.0.0 & drops Node 18",
+    "text": "example/big released v2.0.0 with a breaking change.",
+    "spokenText": "Example big released version 2 with a breaking change.",
+    "storyId": "story-big-v2"
+  },
+  {
+    "id": "why",
+    "kind": "why",
+    "title": "Why this matters",
+    "text": "Update if you depend on either package.",
+    "spokenText": "Update if you depend on either package."
+  },
+  {
+    "id": "watching",
+    "kind": "watching",
+    "title": "Worth watching",
+    "text": "A proposal to add streaming is under review.",
+    "spokenText": "A proposal to add streaming is under review."
+  },
+  {
+    "id": "closing",
+    "kind": "closing",
+    "title": "Closing",
+    "text": "That's the report.",
+    "spokenText": "That's the report. See you this afternoon."
+  }
+]
