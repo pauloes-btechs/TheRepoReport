@@ -1,2 +1,6 @@
-# Speech engine for the edition workflow (Piper, GPL-3.0, run as a separate program).
+# Speech engines for the edition workflow, run as separate programs.
+# Kokoro (default voice): kokoro-onnx is MIT, Kokoro-82M weights are Apache-2.0.
+kokoro-onnx>=0.4,<1
+soundfile>=0.12
+# Piper (fallback voice): GPL-3.0.
 piper-tts>=1.3,<2

@@ -76,7 +76,7 @@ export function AboutPage() {
           <li>GitHub Actions runs the newsroom on free public-repository minutes.</li>
           <li>GitHub Pages hosts this site, the audio and the feed.</li>
           <li>Ollama runs an open model on the build machine; no paid AI service is called.</li>
-          <li>Piper turns the script into speech offline.</li>
+          <li>Kokoro, an open speech model, reads the script aloud on the same machine. Piper is the backup voice.</li>
           <li>There is no server, database or account. Your settings on this page stay in your browser.</li>
         </ul>
       </section>

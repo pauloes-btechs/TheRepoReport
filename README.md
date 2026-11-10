@@ -5,7 +5,7 @@
 - **Listen:** https://pauloes-btechs.github.io/TheRepoReport/
 - **Podcast feed:** https://pauloes-btechs.github.io/TheRepoReport/feed.xml (episodes expire after 7 days)
 - **Schedule:** 7:15 AM, 1:15 PM and 7:15 PM New York time
-- **Cost:** $0 per month. GitHub Actions on a public repo, GitHub Pages, Ollama and Piper running inside the job. See [docs/COSTS.md](docs/COSTS.md).
+- **Cost:** $0 per month. GitHub Actions on a public repo, GitHub Pages, Ollama and Kokoro (speech) running inside the job. See [docs/COSTS.md](docs/COSTS.md).
 
 No server and no paid API; nothing runs on your own computer.
 
@@ -18,7 +18,7 @@ GitHub REST API ──► collect ──► stories ──► score ──► se
                        advisory → one   point cited)     covered skip)   beginner level)         fallback template)
                        story)
                                                                                   │
-                     GitHub Pages ◄── manifest + report + feed ◄── narrate (Piper + FFmpeg) ◄── script
+                     GitHub Pages ◄── manifest + report + feed ◄── narrate (Kokoro + FFmpeg) ◄── script
                      (7-day archive carried forward each run)      (MP3 with chapters)
 ```
 
@@ -37,7 +37,7 @@ GitHub REST API ──► collect ──► stories ──► score ──► se
 Production configuration lives in two version-controlled files:
 
 - [`config/watchlist.json`](config/watchlist.json): repositories, category, priority (1–3), enabled, topics. With `includeStarred: true`, the public stars of `githubUser` are merged in at run time (config entries win, capped at `maxRepos`).
-- [`config/editorial.json`](config/editorial.json): topic interests, rubric weights (must total 100), minimum score, max stories, target length, retention, Piper voice, Ollama model, inference budget, pronunciation lexicon.
+- [`config/editorial.json`](config/editorial.json): topic interests, rubric weights (must total 100), minimum score, max stories, target length, retention, narrator voice, Ollama model, inference budget, pronunciation lexicon.
 
 The site's **Settings** page edits a *draft* of these files in your browser, shows a diff against what is deployed, and gives you a download or a link to GitHub's editor. Drafts change nothing until committed. The site never asks for a token.
 
@@ -60,7 +60,7 @@ npm run eval             # editorial quality eval on recorded fixtures (add --li
 npx tsx scripts/dev-data.ts && npm run dev   # web app with local fixture data
 ```
 
-Run an edition locally (needs Ollama, Piper and FFmpeg; otherwise it degrades to the fallback paths):
+Run an edition locally (needs Ollama, Kokoro or Piper, and FFmpeg; otherwise it degrades to the fallback paths):
 
 ```bash
 GITHUB_TOKEN=<token> npx tsx pipeline/run.ts --dry-run --replay-hours 36
@@ -81,9 +81,9 @@ From real runs on `ubuntu-latest` (4 vCPU, 16 GB, CPU only); details in [docs/BE
 | Whole job | about 9–10 min |
 | GitHub API | about 130 requests for 21 repos (limit 1,000/hour) |
 | `qwen3:4b-instruct` | about 7 tokens/s; about 60 s per story after output caps |
-| Piper narration | real-time factor about 0.3; about 5 min of audio in about 100 s |
+| Kokoro narration | about 0.4 s of compute per second of audio (2 vCPU); two voices, George and Heart, take turns |
 | Peak runner memory | about 5 GB of 16 GB |
 
 ## Licenses
 
-Code: MIT. Piper (GPL-3.0) is run as a separate program, never imported. Default voice `en_US-ljspeech-high` is trained on public-domain data ([docs/VOICES.md](docs/VOICES.md)). Qwen3 weights: Apache-2.0.
+Code: MIT. Piper (GPL-3.0) is run as a separate program, never imported. Narration uses Kokoro-82M (Apache-2.0 weights, run via kokoro-onnx, MIT); the Piper fallback voice `en_US-ljspeech-high` is trained on public-domain data ([docs/VOICES.md](docs/VOICES.md)). Qwen3 weights: Apache-2.0.

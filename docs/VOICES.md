@@ -4,20 +4,25 @@ TheRepoReport narrates each edition with [Piper](https://github.com/OHF-Voice/pi
 neural text-to-speech engine, then FFmpeg joins, normalizes and encodes the result
 (`pipeline/audio`).
 
-## Default voice: `en_US-ljspeech-high`
+## Default voices: Kokoro George and Heart, as co-anchors
+
+Editions are narrated by [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M), an open speech model with Apache-2.0 weights, run through [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx) (MIT). It replaced Piper as the default on 2026-11-10 because Piper's narration sounded choppy.
 
 | | |
 |---|---|
-| Language | U.S. English, single speaker (female) |
-| Quality tier | high (22,050 Hz output) |
-| Configured in | `config/editorial.json` → `voice` |
-| Dataset | [LJ Speech](https://keithito.com/LJ-Speech-Dataset/), public domain |
+| Configured in | `config/editorial.json` → `voice: "kokoro:bm_george\|af_heart"`. The voices take turns segment by segment (George opens). Use `kokoro:bm_george` or `kokoro:af_heart` for a single narrator. |
+| Other voices | `kokoro:am_michael` (US male), `kokoro:af_bella`, `kokoro:am_adam`, and others in `voices-v1.0.bin`. Chosen by listening tests: George (British male) and Heart (US female) sounded best. |
+| Blends | `kokoro:am_michael:60,af_heart:40` mixes two voices by weight into one narrator |
+| Model | `kokoro-v1.0.fp16.onnx` (177 MB) + `voices-v1.0.bin` (28 MB), downloaded from the kokoro-onnx GitHub release and cached by Actions |
+| Speed | 0.40–0.47 s of compute per second of audio on 2 vCPUs (fp16). The int8 model was 3× slower on these CPUs, so it isn't used. |
+| Helper | `scripts/kokoro_tts.py`, run as a separate program with one process for all segments |
 
-This voice was chosen because its training data is public domain, so publishing a public podcast feed
-raises no voice-license question. The earlier candidate, `en_US-lessac-medium`, was trained on the
-Blizzard Challenge 2013 Lessac data, which is under the Lessac *Noncommercial* Use license
-(<https://www.cstr.inf.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013_software/license.html>);
-it, and every English voice fine-tuned from it, is avoided for that reason.
+**Fallback:** if Kokoro is missing or fails, `narrate()` uses Piper with `en_US-ljspeech-high` (public domain) so the edition still has audio. The report records the voice actually used, and the site shows it.
+
+## Piper voices
+
+Set `voice` to a plain Piper name (no `kokoro:` prefix) to narrate with Piper directly. The default Piper voice is `en_US-ljspeech-high`, trained on [LJ Speech](https://keithito.com/LJ-Speech-Dataset/), which is public domain. `lessac` voices are avoided: the Blizzard 2013 Lessac data is under a *noncommercial* license
+(<https://www.cstr.inf.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013_software/license.html>).
 
 ### Where voices come from
 

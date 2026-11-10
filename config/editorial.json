@@ -23,7 +23,7 @@
     "max": 12
   },
   "retentionDays": 7,
-  "voice": "en_US-ljspeech-high",
+  "voice": "kokoro:bm_george|af_heart",
   "model": "qwen3:4b-instruct",
   "inferenceBudgetSeconds": 1200,
   "lexicon": {

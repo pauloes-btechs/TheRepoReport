@@ -59,7 +59,7 @@ export function validateEditorial(draft: EditorialConfig): string[] {
   if (!(draft.targetMinutes.min > 0) || !(draft.targetMinutes.max > 0)) errors.push('Target length must be positive.');
   else if (draft.targetMinutes.min > draft.targetMinutes.max) errors.push('Target length minimum cannot exceed the maximum.');
   if (!Number.isInteger(draft.retentionDays) || draft.retentionDays < 1) errors.push('Retention must be a whole number of days.');
-  if (!draft.voice.trim()) errors.push('Choose a Piper voice.');
+  if (!draft.voice.trim()) errors.push('Choose a narrator voice.');
   if (!draft.model.trim()) errors.push('Choose a model.');
   if (errors.length === 0) {
     const parsed = EditorialConfig.safeParse(draft);

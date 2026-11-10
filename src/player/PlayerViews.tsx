@@ -55,7 +55,7 @@ export function EditionPlayer({ report, reportPath }: { report: EditionReport; r
             <p className="font-semibold text-ink">Play the {editionTitle(report.edition)}</p>
             <p className="text-sm text-ink-3">
               {formatDuration(report.audio.durationSec) ?? 'Audio'}
-              {report.audio.voice ? `, read by Piper voice ${report.audio.voice}` : ''}
+              {report.audio.voice ? `, read by ${voiceLabel(report.audio.voice)}` : ''}
             </p>
           </div>
         </div>
@@ -189,4 +189,13 @@ export function PlayerBar() {
       </div>
     </section>
   );
+}
+
+const VOICE_NAMES: Record<string, string> = { bm_george: 'George', af_heart: 'Heart', am_michael: 'Michael', af_bella: 'Bella' };
+
+/** "kokoro:bm_george|af_heart" → "George and Heart (Kokoro)"; Piper names pass through. */
+function voiceLabel(voice: string): string {
+  if (!voice.startsWith('kokoro:')) return `Piper voice ${voice}`;
+  const names = voice.slice('kokoro:'.length).split('|').map((v) => VOICE_NAMES[v.trim()] ?? v.trim());
+  return `${names.join(' and ')} (Kokoro)`;
 }

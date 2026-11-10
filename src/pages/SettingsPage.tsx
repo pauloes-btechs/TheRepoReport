@@ -601,9 +601,12 @@ function EditorialEditor({ editorial, onChange, errors }: { editorial: Editorial
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor={`${base}-voice`} className="text-sm font-medium text-ink-2">
-              Piper voice
+              Narrator voice
             </label>
-            <input id={`${base}-voice`} value={editorial.voice} onChange={(e) => onChange({ voice: e.target.value })} className={cx(input, 'mt-1')} spellCheck={false} />
+            <input id={`${base}-voice`} value={editorial.voice} onChange={(e) => onChange({ voice: e.target.value })} className={cx(input, 'mt-1')} spellCheck={false} aria-describedby={`${base}-voice-help`} />
+            <p id={`${base}-voice-help`} className="mt-1 text-xs text-ink-3">
+              Kokoro: <code>kokoro:bm_george</code>, <code>kokoro:af_heart</code>, or co-anchors taking turns <code>kokoro:bm_george|af_heart</code>. Piper: a voice name such as <code>en_US-ljspeech-high</code>.
+            </p>
           </div>
           <div>
             <label htmlFor={`${base}-model`} className="text-sm font-medium text-ink-2">

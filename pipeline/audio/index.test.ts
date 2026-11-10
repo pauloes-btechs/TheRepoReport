@@ -252,3 +252,49 @@ describe.skipIf(!hasFfmpeg)('validateMp3', () => {
     expect((await validateMp3(junk)).ok).toBe(false);
   });
 });
+
+describe.skipIf(!hasFfmpeg)('narrate with Kokoro voices', () => {
+  const FAKE_KOKORO = join(FIXTURES, 'fake-kokoro.mjs');
+  let kokoroLog: string;
+  let piperLog: string;
+  beforeEach(() => {
+    kokoroLog = join(tempDir(), 'kokoro.jsonl');
+    piperLog = join(tempDir(), 'piper.jsonl');
+    vi.stubEnv('KOKORO_CMD', JSON.stringify(['node', FAKE_KOKORO]));
+    vi.stubEnv('FAKE_KOKORO_LOG', kokoroLog);
+    vi.stubEnv('PIPER_CMD', JSON.stringify(['node', FAKE_PIPER]));
+    vi.stubEnv('FAKE_PIPER_LOG', piperLog);
+    vi.stubEnv('PIPER_VOICES_DIR', '/voices');
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('narrates every segment in one Kokoro call with valid chapters', async () => {
+    const outFile = join(tempDir(), 'data', 'editions', '2026-11-10-evening', 'audio.mp3');
+    const info = await narrate({ segments, voice: 'kokoro:am_michael', workDir: tempDir(), outFile });
+    expect(info.unavailableReason).toBeUndefined();
+    expect(info.available).toBe(true);
+    expect(info.voice).toBe('kokoro:am_michael');
+    expect(info.chapters).toHaveLength(segments.length);
+    expect(readFileSync(kokoroLog, 'utf8').trim().split('\n').map((l) => JSON.parse(l))).toEqual([
+      { voice: 'am_michael', segments: segments.length },
+    ]);
+    expect(existsSync(piperLog)).toBe(false);
+    expect((await validateMp3(outFile)).ok).toBe(true);
+  });
+
+  it('falls back to Piper when Kokoro fails, and reports the voice actually used', async () => {
+    vi.stubEnv('FAKE_KOKORO_MODE', 'fail');
+    const info = await narrate({ segments, voice: 'kokoro:am_michael', workDir: tempDir(), outFile: join(tempDir(), 'a.mp3') });
+    expect(info.available).toBe(true);
+    expect(info.voice).toBe('en_US-ljspeech-high');
+    expect(existsSync(piperLog)).toBe(true);
+  });
+
+  it('reports Kokoro model files that were never downloaded, then falls back', async () => {
+    vi.stubEnv('KOKORO_CMD', '');
+    vi.stubEnv('KOKORO_MODEL', '/nonexistent/kokoro.onnx');
+    const info = await narrate({ segments, voice: 'kokoro:am_michael', workDir: tempDir(), outFile: join(tempDir(), 'a.mp3') });
+    expect(info.available).toBe(true);
+    expect(info.voice).toBe('en_US-ljspeech-high');
+  });
+});
