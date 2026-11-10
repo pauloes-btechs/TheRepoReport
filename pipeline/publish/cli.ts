@@ -8,6 +8,8 @@ export interface CliArgs {
   /** Only resolve the edition and check whether it is already live. */
   checkOnly: boolean;
   model?: string;
+  /** Dry runs only: re-collect the last N hours ignoring saved state. */
+  replayHours?: string;
   siteDir: string;
   stateFile: string;
   nextStateFile: string;
@@ -29,6 +31,7 @@ export function parseCliArgs(argv: readonly string[]): CliArgs {
   const valueFlags: Record<string, keyof CliArgs> = {
     '--edition': 'edition',
     '--model': 'model',
+    '--replay-hours': 'replayHours',
     '--site-dir': 'siteDir',
     '--state-file': 'stateFile',
     '--next-state-file': 'nextStateFile',
@@ -98,6 +101,22 @@ export function renderSummaryMarkdown(result: RunEditionResult): string {
   for (const [stage, secs] of Object.entries(s.stageSeconds)) if (stage !== 'total') lines.push(`| ${stage} | ${secs} |`);
   lines.push(`| total | ${fmt(s.stageSeconds.total)} |`);
   lines.push('', '</details>', '');
+  if (s.candidates && s.candidates.length > 0) {
+    const keys = Object.keys(s.candidates[0]!.dims);
+    lines.push(
+      '<details><summary>Top candidates by score</summary>',
+      '',
+      `| Score | ${keys.join(' | ')} | Status | Repo | Title | Outcome |`,
+      `|---:|${keys.map(() => '---:').join('|')}|---|---|---|---|`,
+    );
+    for (const c of s.candidates) {
+      const cell = (t: string) => t.replace(/\|/g, '\\|').replace(/\s+/g, ' ');
+      lines.push(
+        `| ${c.total} | ${keys.map((k) => c.dims[k] ?? 0).join(' | ')} | ${c.status} | ${c.repo} | ${cell(c.title)} | ${cell(c.outcome)} |`,
+      );
+    }
+    lines.push('', '</details>', '');
+  }
   return lines.join('\n');
 }
 

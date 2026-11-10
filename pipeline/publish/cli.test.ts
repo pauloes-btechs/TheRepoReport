@@ -3,6 +3,10 @@ import { infraFromEnv, parseCliArgs, renderGithubOutputs, renderSummaryMarkdown 
 import type { RunEditionResult } from './orchestrate';
 
 describe('parseCliArgs', () => {
+  it('parses --replay-hours', () => {
+    expect(parseCliArgs(['--dry-run', '--replay-hours', '36'])).toMatchObject({ dryRun: true, replayHours: '36' });
+  });
+
   it('parses flags and values, treating empty values as unset', () => {
     expect(parseCliArgs(['--edition', '2026-11-10-evening', '--force', '--dry-run', '--model=qwen3:1.7b', '--site-dir', 'out', '--edition='])).toMatchObject({
       force: true,

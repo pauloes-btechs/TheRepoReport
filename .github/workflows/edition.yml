@@ -39,6 +39,11 @@ on:
         description: 'Simulate a Piper failure (publish without downloadable audio)'
         type: boolean
         default: false
+      replay_hours:
+        description: 'Dry runs only: ignore saved state and re-collect the last N hours (for calibrating scoring)'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: write   # push the `state` branch
@@ -242,6 +247,7 @@ jobs:
           PIPER_VOICES_DIR: ${{ github.workspace }}/.work/voices
           FORCE_FALLBACK: ${{ inputs.force_fallback && '1' || '' }}
           FORCE_NO_AUDIO: ${{ inputs.force_no_audio && '1' || '' }}
+          INPUT_REPLAY_HOURS: ${{ inputs.replay_hours }}
           # Repository variable; set to 1 only to deliberately start a new archive (see docs/OPERATIONS.md).
           ALLOW_EMPTY_ARCHIVE: ${{ vars.ALLOW_EMPTY_ARCHIVE }}
         run: |
@@ -249,6 +255,10 @@ jobs:
           if [ -n "$INPUT_EDITION" ]; then args+=(--edition "$INPUT_EDITION"); fi
           if [ "$INPUT_FORCE" = "true" ]; then args+=(--force); fi
           if [ "$INPUT_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          if [ -n "$INPUT_REPLAY_HOURS" ]; then
+            [[ "$INPUT_REPLAY_HOURS" =~ ^[0-9]{1,3}$ ]] || { echo "::error::replay_hours must be a whole number"; exit 1; }
+            args+=(--replay-hours "$INPUT_REPLAY_HOURS")
+          fi
           npx tsx pipeline/run.ts "${args[@]}"
 
       - name: Add the frontend to the site

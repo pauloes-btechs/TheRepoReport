@@ -301,3 +301,28 @@ describe('dry run', () => {
     expect(existsSync(join(root, 'work/dry-run/next-state.json'))).toBe(true);
   });
 });
+
+describe('replay (calibration dry runs)', () => {
+  it('re-collects the requested window from empty state and never deploys', async () => {
+    await writeState({ schemaVersion: 1, lastEditionKey: '2026-11-10-morning', repos: { 'a/b': { since: now.toISOString(), etags: {} } }, stories: {} });
+    const d = fakeDeps();
+    const seen: { lookback?: number; cursors: number }[] = [];
+    const collect = d.collect;
+    d.collect = (o) => {
+      seen.push({ lookback: o.initialLookbackHours, cursors: Object.keys(o.state.repos).length });
+      return collect(o);
+    };
+    const result = await runEdition(d, options({ dryRun: true, replayHours: 36, allowEmptyArchive: true }));
+    expect(result.status).toBe('dry-run');
+    expect(result.deploy).toBe(false);
+    expect(seen).toEqual([{ lookback: 36, cursors: 0 }]);
+    expect(result.summary.candidates?.length).toBeGreaterThan(0);
+    expect(existsSync(join(root, 'state/next-state.json'))).toBe(false);
+  });
+
+  it('refuses replay outside a dry run', async () => {
+    const result = await runEdition(fakeDeps(), options({ replayHours: 36, allowEmptyArchive: true }));
+    expect(result.status).toBe('failed');
+    expect(result.deploy).toBe(false);
+  });
+});
