@@ -11,7 +11,7 @@ import {
   buildMessages,
   buildRetryMessage,
   explanationJsonSchema,
-  isRoutine,
+  wantsTechnicalLayers,
   loadExemplars,
   loadInstructions,
   type ChatMessage,
@@ -35,7 +35,7 @@ export interface ExplainInternals {
   clock?: () => number;
 }
 
-export const DEFAULT_REQUEST_TIMEOUT_MS = 180_000;
+export const DEFAULT_REQUEST_TIMEOUT_MS = 300_000;
 
 const silentLogger: Logger = { info() {}, warn() {}, error() {} };
 
@@ -163,7 +163,7 @@ export async function explainStoriesWith(
         notes.push('Accepted on retry.');
       }
       const value = result.value!;
-      if (isRoutine(story)) {
+      if (!wantsTechnicalLayers(story)) {
         value.intermediate = '';
         value.technical = '';
       }

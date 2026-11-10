@@ -71,7 +71,22 @@ describe('explainStories: Ollama request', () => {
     expect(x.intermediate).toBe('');
     expect(x.technical).toBe('');
     const prompt = (ollama.chatCalls()[0]!.body!.messages as { content: string }[]).at(-1)!.content;
-    expect(prompt).toMatch(/Routine: set "intermediate" and "technical" to empty strings/);
+    expect(prompt).toMatch(/Set "intermediate" and "technical" to empty strings/);
+  });
+
+  it('caps every free-text field in the format schema and uses all CPU threads', async () => {
+    const ollama = fakeOllama({ replies: ['{}'] });
+    await explainStories([loadFixture('routine-maintenance').story], { editorial, fetch: ollama.fetch }).catch(() => undefined);
+    const body = ollama.chatCalls()[0]!.body! as {
+      format: { properties: Record<string, { maxLength?: number; maxItems?: number }> };
+      options: { num_thread: number; num_predict: number };
+    };
+    for (const key of ['headline', 'whatHappened', 'previously', 'whatChanged', 'whyItMatters', 'analogy', 'intermediate', 'technical']) {
+      expect(body.format.properties[key]?.maxLength).toBeGreaterThan(0);
+    }
+    expect(body.format.properties.glossary?.maxItems).toBe(2);
+    expect(body.options.num_thread).toBeGreaterThan(0);
+    expect(body.options.num_predict).toBeGreaterThanOrEqual(700);
   });
 });
 

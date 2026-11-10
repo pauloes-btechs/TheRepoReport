@@ -127,17 +127,36 @@ function breaking(s: Story): Signal[] {
 const FEATURE_SECTION = /^\s*#{1,4}\s*(new features?|features?|what'?s new|added|enhancements?)\b|^\s*[-*]\s*feat(\(|!|:)/im;
 const FEATURE_TITLE = /^\s*(feat(\(|!|:)|add(s|ed)?\b|introduc|implement|support for\b|new\b)/i;
 
+// Many projects write release notes as "- Added …" / "* Fixed …" bullets rather
+// than "## Features" headings (Claude Code, Ollama, Next.js all do).
+const FEATURE_BULLET = /^\s*[-*•]\s+(?:\*\*)?(add(s|ed)?|new|introduc\w*|support(s|ed)? for|now (supports|lets|allows)|enable(s|d)?)\b/gim;
+const FIX_BULLET = /^\s*[-*•]\s+(?:\*\*)?(fix(es|ed)?|resolv\w*|correct(s|ed)?|prevent(s|ed)?)\b/gim;
+
+export function countBullets(body: string, pattern: RegExp): number {
+  return body.match(pattern)?.length ?? 0;
+}
+
 function capability(s: Story): Signal[] {
   const major = releaseOfType(s, 'major');
   const minor = releaseOfType(s, 'minor');
   const versionBump = major ?? minor;
+  const featureRelease = stableReleases(s).find(
+    (e) => FEATURE_SECTION.test(e.body) || countBullets(e.body, FEATURE_BULLET) > 0,
+  );
+  const featureCount = featureRelease ? countBullets(featureRelease.body, FEATURE_BULLET) : 0;
   return [
-    ...firstMatch(
-      stableReleases(s),
-      (e) => FEATURE_SECTION.test(e.body),
-      10,
-      (e) => `Release ${e.tagName ?? e.title} lists new features`,
-    ),
+    ...(featureRelease
+      ? [
+          {
+            points: 10,
+            reason: `Release ${featureRelease.tagName ?? featureRelease.title} lists new features`,
+            evidenceUrl: featureRelease.url,
+          },
+        ]
+      : []),
+    ...(featureCount >= 3
+      ? [{ points: 4, reason: `Release notes list ${featureCount} additions`, evidenceUrl: featureRelease!.url }]
+      : []),
     ...firstMatch(s.events, hasLabel(/feature|enhancement/i), 6, () => 'Labeled as a feature or enhancement'),
     ...(versionBump
       ? [{ points: 6, reason: `Feature-level version bump ${versionBump.tagName}`, evidenceUrl: versionBump.url }]
@@ -159,7 +178,12 @@ const PERF_TITLE = /\b(perf(ormance)?|faster|speed ?up|latency|throughput)\b/i;
 
 function reliability(s: Story): Signal[] {
   const patch = releaseOfType(s, 'patch');
+  const fixRelease = stableReleases(s).find((e) => countBullets(e.body, FIX_BULLET) > 0);
+  const fixCount = fixRelease ? countBullets(fixRelease.body, FIX_BULLET) : 0;
   return [
+    ...(fixRelease
+      ? [{ points: fixCount >= 5 ? 8 : 5, reason: `Release notes list ${fixCount} bug fix${fixCount === 1 ? '' : 'es'}`, evidenceUrl: fixRelease.url }]
+      : []),
     ...firstMatch(s.events, (e) => FIX_TITLE.test(e.title), 5, () => 'Fixes a bug'),
     ...firstMatch(
       s.events,

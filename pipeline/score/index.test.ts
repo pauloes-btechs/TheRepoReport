@@ -291,3 +291,32 @@ describe('selectStories', () => {
     expect(low.watching).toEqual([]);
   });
 });
+
+describe('bullet-style release notes', () => {
+  const body = [
+    "## What's changed",
+    '- Added a `/usage` command that shows token spend per session',
+    '- Added support for remote MCP servers over HTTP',
+    '- New setting to disable auto-updates',
+    '- Fixed a crash when resuming a session with images',
+    '- Fixed MCP tools not reloading after config changes',
+  ].join('\n');
+
+  it('credits listed additions and fixes so a feature release clears the reporting threshold', () => {
+    const story = storyOf([release(REPO, 'v2.4.0', { body, repoStars: 60_000 })], 'released');
+    const [scored] = scoreStories([story], {
+      editorial,
+      repos: [{ repo: REPO, category: 'AI', priority: 3, enabled: true, topics: ['ai'], source: 'config', recentStoryIds: [] }],
+    });
+    expect(dim(scored!, 'capability').signals.map((s) => s.reason)).toEqual(
+      expect.arrayContaining(['Release v2.4.0 lists new features', 'Release notes list 3 additions']),
+    );
+    expect(dim(scored!, 'reliability').signals.map((s) => s.reason)).toContain('Release notes list 2 bug fixes');
+    expect(scored!.score.total).toBeGreaterThanOrEqual(editorial.minScore);
+  });
+
+  it('does not credit feature bullets on pull requests or issues', () => {
+    const [scored] = scoreStories([storyOf([issue(REPO, 9, { body })], 'proposed')], { editorial, repos: [] });
+    expect(dim(scored!, 'capability').signals.find((s) => s.reason.includes('Release'))).toBeUndefined();
+  });
+});
