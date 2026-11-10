@@ -1,1 +1,240 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * TheRepoReport tokens. Cool paper and deep navy, one cobalt "on air" signal.
+ * Band colors always travel with a text label, never alone.
+ */
+:root {
+  --paper: #f2f4f7;
+  --surface: #ffffff;
+  --surface-2: #e8ecf2;
+  --ink: #121a2b;
+  --ink-2: #3a4560;
+  --ink-3: #56617a;
+  --line: #d3d9e3;
+  --line-strong: #b6bfcd;
+  --signal: #2446c9;
+  --signal-hover: #1b38a6;
+  --signal-ink: #ffffff;
+  --signal-soft: #e2e8ff;
+  --signal-text: #1f3db0;
+
+  --critical-fg: #9b1c13;
+  --critical-bg: #fde7e4;
+  --major-fg: #933210;
+  --major-bg: #ffeddc;
+  --high-fg: #7a4a06;
+  --high-bg: #fdf1c7;
+  --notable-fg: #1d3fa6;
+  --notable-bg: #e2e8ff;
+  --routine-fg: #444f66;
+  --routine-bg: #e8ecf2;
+
+  --ok-fg: #155c3a;
+  --ok-bg: #dcf3e6;
+  --warn-fg: #7a4a06;
+  --warn-bg: #fdf1c7;
+  --bad-fg: #9b1c13;
+  --bad-bg: #fde7e4;
+}
+
+.dark {
+  --paper: #0d1424;
+  --surface: #141d31;
+  --surface-2: #1c2740;
+  --ink: #e8edf7;
+  --ink-2: #c0c9db;
+  --ink-3: #95a0b8;
+  --line: #27324d;
+  --line-strong: #3a4766;
+  --signal: #8ba5ff;
+  --signal-hover: #a9bdff;
+  --signal-ink: #0d1424;
+  --signal-soft: #1f2b52;
+  --signal-text: #a9bdff;
+
+  --critical-fg: #ffb4aa;
+  --critical-bg: #4a1913;
+  --major-fg: #fdbb80;
+  --major-bg: #45220d;
+  --high-fg: #f5d06a;
+  --high-bg: #3b2e0a;
+  --notable-fg: #b3c2ff;
+  --notable-bg: #1f2b52;
+  --routine-fg: #c0c9db;
+  --routine-bg: #232e48;
+
+  --ok-fg: #8fe0b4;
+  --ok-bg: #12382a;
+  --warn-fg: #f5d06a;
+  --warn-bg: #3b2e0a;
+  --bad-fg: #ffb4aa;
+  --bad-bg: #4a1913;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-signal: var(--signal);
+  --color-signal-hover: var(--signal-hover);
+  --color-signal-ink: var(--signal-ink);
+  --color-signal-soft: var(--signal-soft);
+  --color-signal-text: var(--signal-text);
+  --color-critical-fg: var(--critical-fg);
+  --color-critical-bg: var(--critical-bg);
+  --color-major-fg: var(--major-fg);
+  --color-major-bg: var(--major-bg);
+  --color-high-fg: var(--high-fg);
+  --color-high-bg: var(--high-bg);
+  --color-notable-fg: var(--notable-fg);
+  --color-notable-bg: var(--notable-bg);
+  --color-routine-fg: var(--routine-fg);
+  --color-routine-bg: var(--routine-bg);
+  --color-ok-fg: var(--ok-fg);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn-fg: var(--warn-fg);
+  --color-warn-bg: var(--warn-bg);
+  --color-bad-fg: var(--bad-fg);
+  --color-bad-bg: var(--bad-bg);
+
+  --font-serif: "Iowan Old Style", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+    font-family: var(--font-sans);
+    font-feature-settings: "kern";
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--signal-soft);
+    color: var(--ink);
+  }
+  a {
+    text-underline-offset: 0.18em;
+  }
+  button,
+  select,
+  input[type="range"],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Scrubber: a native range input, styled. */
+  .scrubber {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 24px;
+    background: transparent;
+    --pct: 0%;
+  }
+  .scrubber::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--signal) var(--pct), var(--line-strong) var(--pct));
+  }
+  .scrubber::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--line-strong);
+  }
+  .scrubber::-moz-range-progress {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--signal);
+  }
+  .scrubber::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    margin-top: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--signal);
+    border: 2px solid var(--surface);
+  }
+  .scrubber::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--signal);
+    border: 2px solid var(--surface);
+  }
+  .scrubber:focus-visible {
+    outline-offset: 4px;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--line) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+    border-radius: 6px;
+  }
+
+  /* The one moment of ambient motion: the on-air dot while audio plays. */
+  .on-air {
+    animation: on-air 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes on-air {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
