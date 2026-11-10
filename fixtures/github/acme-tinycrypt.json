@@ -1,0 +1,148 @@
+{
+  "_comment": "Small repo (320 stars): a critical advisory, its fixing PR, the issue it fixes and the patch release. Recorded-style responses keyed by request path.",
+  "/repos/acme/tinycrypt": {
+    "headers": { "etag": "W/\"repo-tinycrypt-1\"", "x-ratelimit-remaining": "4990", "x-ratelimit-reset": "1794330000" },
+    "body": {
+      "full_name": "acme/tinycrypt",
+      "html_url": "https://github.com/acme/tinycrypt",
+      "stargazers_count": 320,
+      "pushed_at": "2026-11-10T09:00:00Z",
+      "topics": ["cryptography", "security"]
+    }
+  },
+  "/repos/acme/tinycrypt/releases": {
+    "headers": { "etag": "W/\"releases-tinycrypt-1\"", "x-ratelimit-remaining": "4989" },
+    "body": [
+      {
+        "tag_name": "v2.4.1",
+        "name": "v2.4.1",
+        "body": "## Security\n- Fix signature verification bypass by @maintainer in https://github.com/acme/tinycrypt/pull/88\n\n<!-- release-drafter: do not edit -->\n**Full Changelog**: https://github.com/acme/tinycrypt/compare/v2.4.0...v2.4.1",
+        "html_url": "https://github.com/acme/tinycrypt/releases/tag/v2.4.1",
+        "draft": false,
+        "prerelease": false,
+        "created_at": "2026-11-10T08:00:00Z",
+        "published_at": "2026-11-10T08:05:00Z",
+        "author": { "login": "maintainer", "type": "User" }
+      },
+      {
+        "tag_name": "v2.4.0",
+        "name": "v2.4.0",
+        "body": "## Features\n- Ed25519 batch verification",
+        "html_url": "https://github.com/acme/tinycrypt/releases/tag/v2.4.0",
+        "draft": false,
+        "prerelease": false,
+        "created_at": "2026-10-01T10:00:00Z",
+        "published_at": "2026-10-01T10:00:00Z",
+        "author": { "login": "maintainer", "type": "User" }
+      }
+    ]
+  },
+  "/repos/acme/tinycrypt/pulls": {
+    "headers": { "etag": "W/\"pulls-tinycrypt-1\"", "x-ratelimit-remaining": "4988" },
+    "body": [
+      {
+        "number": 90,
+        "title": "WIP: constant-time comparison experiments",
+        "body": "Not ready.",
+        "html_url": "https://github.com/acme/tinycrypt/pull/90",
+        "state": "open",
+        "draft": true,
+        "user": { "login": "contributor", "type": "User" },
+        "labels": [],
+        "created_at": "2026-11-10T06:00:00Z",
+        "updated_at": "2026-11-10T08:30:00Z",
+        "merged_at": null
+      },
+      {
+        "number": 88,
+        "title": "Fix signature verification bypass",
+        "body": "Fixes #87.\r\n\r\nRejects malformed DER signatures before verification.",
+        "html_url": "https://github.com/acme/tinycrypt/pull/88",
+        "state": "closed",
+        "draft": false,
+        "user": { "login": "maintainer", "type": "User" },
+        "labels": [{ "name": "security" }],
+        "created_at": "2026-11-09T20:00:00Z",
+        "updated_at": "2026-11-10T07:10:00Z",
+        "merged_at": "2026-11-10T07:00:00Z"
+      },
+      {
+        "number": 70,
+        "title": "Add Ed25519 batch verification",
+        "body": "",
+        "html_url": "https://github.com/acme/tinycrypt/pull/70",
+        "state": "closed",
+        "draft": false,
+        "user": { "login": "maintainer", "type": "User" },
+        "labels": [],
+        "created_at": "2026-09-20T10:00:00Z",
+        "updated_at": "2026-09-30T10:00:00Z",
+        "merged_at": "2026-09-30T10:00:00Z"
+      }
+    ]
+  },
+  "/repos/acme/tinycrypt/issues": {
+    "headers": { "x-ratelimit-remaining": "4987" },
+    "body": [
+      {
+        "number": 88,
+        "title": "Fix signature verification bypass",
+        "body": "Fixes #87.",
+        "html_url": "https://github.com/acme/tinycrypt/pull/88",
+        "state": "closed",
+        "user": { "login": "maintainer", "type": "User" },
+        "labels": [{ "name": "security" }],
+        "comments": 2,
+        "reactions": { "total_count": 4 },
+        "created_at": "2026-11-09T20:00:00Z",
+        "updated_at": "2026-11-10T07:10:00Z",
+        "pull_request": { "url": "https://api.github.com/repos/acme/tinycrypt/pulls/88" }
+      },
+      {
+        "number": 87,
+        "title": "Signature check can be bypassed with malformed DER input",
+        "body": "Reported privately; tracking publicly after the fix.",
+        "html_url": "https://github.com/acme/tinycrypt/issues/87",
+        "state": "closed",
+        "user": { "login": "researcher", "type": "User" },
+        "labels": [{ "name": "security" }, { "name": "bug" }],
+        "comments": 3,
+        "reactions": { "total_count": 1 },
+        "created_at": "2026-11-09T19:00:00Z",
+        "updated_at": "2026-11-10T07:12:00Z"
+      },
+      {
+        "number": 91,
+        "title": "Typo in README",
+        "body": "teh -> the",
+        "html_url": "https://github.com/acme/tinycrypt/issues/91",
+        "state": "open",
+        "user": { "login": "drive-by", "type": "User" },
+        "labels": [],
+        "comments": 0,
+        "reactions": { "total_count": 0 },
+        "created_at": "2026-11-10T05:00:00Z",
+        "updated_at": "2026-11-10T05:00:00Z"
+      }
+    ]
+  },
+  "/repos/acme/tinycrypt/security-advisories": {
+    "headers": { "etag": "W/\"advisories-tinycrypt-1\"", "x-ratelimit-remaining": "4986" },
+    "body": [
+      {
+        "ghsa_id": "GHSA-2c4f-8mxq-3vh7",
+        "cve_id": "CVE-2026-41234",
+        "html_url": "https://github.com/acme/tinycrypt/security/advisories/GHSA-2c4f-8mxq-3vh7",
+        "summary": "Signature verification bypass in tinycrypt",
+        "description": "Malformed DER signatures were accepted as valid, allowing forged signatures. Fixed in #88 and released in 2.4.1.",
+        "severity": "critical",
+        "created_at": "2026-11-09T18:00:00Z",
+        "updated_at": "2026-11-10T08:10:00Z",
+        "published_at": "2026-11-10T08:10:00Z",
+        "vulnerabilities": [
+          { "package": { "name": "tinycrypt" }, "vulnerable_version_range": "< 2.4.1", "patched_versions": "2.4.1" }
+        ]
+      }
+    ]
+  }
+}
