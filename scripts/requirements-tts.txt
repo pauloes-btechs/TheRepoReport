@@ -1,0 +1,2 @@
+# Speech engine for the edition workflow (Piper, GPL-3.0, run as a separate program).
+piper-tts>=1.3,<2
