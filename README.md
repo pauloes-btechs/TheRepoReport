@@ -81,7 +81,7 @@ From real runs on `ubuntu-latest` (4 vCPU, 16 GB, CPU only); details in [docs/BE
 | Whole job | about 9–10 min |
 | GitHub API | about 130 requests for 21 repos (limit 1,000/hour) |
 | `qwen3:4b-instruct` | about 7 tokens/s; about 60 s per story after output caps |
-| Kokoro narration | about 0.4 s of compute per second of audio (2 vCPU); two voices, George and Heart, take turns |
+| Kokoro narration | about 0.4 s of compute per second of audio (2 vCPU); George and Heart alternate from edition to edition |
 | Peak runner memory | about 5 GB of 16 GB |
 
 ## Licenses

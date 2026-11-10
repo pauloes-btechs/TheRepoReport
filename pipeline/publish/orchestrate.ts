@@ -25,7 +25,7 @@ import type {
   SelectStories,
   Selection,
 } from '../../shared/contracts';
-import { parseEditionKey, resolveEdition, type ResolvedEdition } from '../../shared/edition';
+import { parseEditionKey, resolveEdition, voiceForEdition, type ResolvedEdition } from '../../shared/edition';
 import {
   AudioInfo,
   emptyState,
@@ -311,7 +311,8 @@ export async function runEdition(deps: EditionDeps, opts: RunEditionOptions): Pr
     // 11. Narrate into scratch space; copied into the site at publish time.
     const audioWork = join(workDir, 'audio', edition.key);
     const audioOut = join(audioWork, 'audio.mp3');
-    const voice = opts.voice ?? config.editorial.voice;
+    // One narrator per edition, rotating between editions when several are configured.
+    const voice = voiceForEdition(opts.voice ?? config.editorial.voice, edition.key);
     const narrated: { audio: AudioInfo; audioSeconds: number } = await stage('audio', async () => {
       if (forceNoAudio) {
         logger.warn('FORCE_NO_AUDIO set; skipping speech synthesis');

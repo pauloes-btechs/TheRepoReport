@@ -97,3 +97,24 @@ export function isExpired(date: string, now: Date, retentionDays: number): boole
   );
   return ageDays >= retentionDays;
 }
+
+/**
+ * A voice setting may list narrators separated by "|" (e.g.
+ * "kokoro:bm_george|af_heart"). Each edition is read by one narrator, rotating
+ * through the list slot by slot, so consecutive editions always change voice:
+ * with two narrators, morning A, afternoon B, evening A, next morning B, ...
+ */
+export function voiceForEdition(voice: string, key: string): string {
+  const prefix = voice.startsWith('kokoro:') ? 'kokoro:' : '';
+  const names = voice
+    .slice(prefix.length)
+    .split('|')
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (names.length <= 1) return voice;
+  const parsed = parseEditionKey(key);
+  if (!parsed) return `${prefix}${names[0]}`;
+  const day = Math.round(Date.parse(`${parsed.date}T12:00:00Z`) / 86_400_000);
+  const slot = day * EDITIONS.length + EDITIONS.indexOf(parsed.edition);
+  return `${prefix}${names[slot % names.length]}`;
+}
