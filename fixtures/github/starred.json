@@ -1,0 +1,21 @@
+{
+  "_comment": "GET /users/{user}/starred across two pages. One starred repo duplicates a config entry and must not be imported twice.",
+  "/users/octo-reader/starred": {
+    "headers": {
+      "x-ratelimit-remaining": "4999",
+      "link": "<https://api.github.com/user/1/starred?per_page=100&page=2>; rel=\"next\""
+    },
+    "body": [
+      { "full_name": "acme/tinycrypt", "stargazers_count": 320, "topics": ["security"] },
+      { "full_name": "star/one", "stargazers_count": 10, "topics": ["ai"] },
+      { "full_name": "star/two", "stargazers_count": 20, "topics": [] }
+    ]
+  },
+  "/user/1/starred?page=2": {
+    "headers": { "x-ratelimit-remaining": "4998" },
+    "body": [
+      { "full_name": "star/three", "stargazers_count": 30, "topics": [] },
+      { "full_name": "star/four", "stargazers_count": 40, "topics": [] }
+    ]
+  }
+}
