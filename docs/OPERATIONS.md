@@ -121,7 +121,7 @@ GitHub docs: "In a public repository, scheduled workflows are automatically disa
 
 ## Changing the model or voice
 
-- **Model:** edit `model` (and optionally `fallbackModel`) in `config/editorial.json` and merge to `main`. The model cache key is `ollama-models-<model>-v1`, so the first run with a new model pulls it cold. To try a model without committing, use the `model` dispatch input. `inferenceBudgetSeconds` bounds wall-clock inference. The LLM stage degrades to fewer stories, then a smaller model, then the template, rather than timing out.
+- **Model:** edit `model` in `config/editorial.json` and merge to `main`. The model cache key is `ollama-models-<model>-v1`, so the first run with a new model pulls it cold. To try a model without committing, use the `model` dispatch input. `inferenceBudgetSeconds` bounds wall-clock inference. When the budget runs out, the remaining stories use the deterministic template instead of timing out. There is no smaller-model step: on the runner `qwen3:1.7b` was no faster per token than the 4B model (see BENCHMARKS.md), so it would not save time.
 - **Voice:** edit `voice` in `config/editorial.json` (for example `en_US-lessac-medium`). The workflow downloads it with `python -m piper.download_voices <voice> --data-dir .work/voices` and caches it under `piper-voice-<voice>-v1`. The pipeline gets the name in `PIPER_VOICE` and the directory in `PIPER_DATA_DIR` / `PIPER_VOICES_DIR`. Each voice has its own license; check its model card before switching.
 - **Piper version:** `scripts/requirements-tts.txt` (`piper-tts>=1.3,<2`).
 - **Busting a cache:** bump the `-v1` suffix in the cache key, or delete the cache under Actions → Caches.

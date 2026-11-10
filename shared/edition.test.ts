@@ -67,3 +67,13 @@ describe('production configuration', () => {
     expect(total).toBe(100);
   });
 });
+
+describe('published URLs', () => {
+  it('accept only https links', async () => {
+    const { HttpsUrl } = await import('./schemas');
+    expect(HttpsUrl.safeParse('https://github.com/a/b/pull/1').success).toBe(true);
+    for (const bad of ['javascript:alert(1)', 'http://github.com/a/b', 'data:text/html,hi']) {
+      expect(HttpsUrl.safeParse(bad).success).toBe(false);
+    }
+  });
+});

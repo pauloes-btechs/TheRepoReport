@@ -1,3 +1,4 @@
+import { redact } from '../util/redact';
 /**
  * Text hygiene for untrusted GitHub content, and cross-reference extraction.
  * Everything fetched from GitHub is data: we only clean and shorten it here.
@@ -12,7 +13,10 @@ const CONTROL_CHARS = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F​-‏‪-‮⁦
 /** Strips HTML comments and control characters, collapses blank runs and truncates. */
 export function sanitizeText(input: string | null | undefined, maxChars = MAX_BODY_CHARS): string {
   if (!input) return '';
-  const cleaned = input
+  // Untrusted text must never carry a credential-shaped string: the publish-time
+  // secret scan would fail every run until the item aged out (a denial of service
+  // anyone could trigger with a PR title).
+  const cleaned = redact(input)
     .replace(/\r\n?/g, '\n')
     .replace(HTML_COMMENT, '')
     .replace(CONTROL_CHARS, '')

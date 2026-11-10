@@ -19,10 +19,23 @@ describe('edition.yml', () => {
     }
   });
 
-  it('has the right permissions, concurrency and time budget', () => {
-    expect(edition).toMatch(/permissions:\n  contents: write.*\n  pages: write.*\n  id-token: write/);
+  it('grants write scopes per job only (least privilege), with concurrency and time budget', () => {
+    // Workflow default is read-only; the build job (untrusted content, installers) inherits it.
+    expect(edition).toMatch(/^permissions:\n  contents: read\n/m);
+    expect(edition).toMatch(/persist-credentials: false/);
+    const deployJob = edition.slice(edition.indexOf('\n  deploy:'), edition.indexOf('\n  commit-state:'));
+    expect(deployJob).toMatch(/permissions:\n      pages: write.*\n      id-token: write/);
+    const stateJob = edition.slice(edition.indexOf('\n  commit-state:'));
+    expect(stateJob).toMatch(/permissions:\n      contents: write/);
+    const buildJob = edition.slice(edition.indexOf('\n  build:'), edition.indexOf('\n  deploy:'));
+    expect(buildJob).not.toMatch(/contents: write|pages: write|id-token: write/);
     expect(edition).toMatch(/concurrency:\n  group: edition\n  cancel-in-progress: false/);
     expect(edition).toMatch(/build:\n    runs-on: ubuntu-latest\n    timeout-minutes: 45/);
+  });
+
+  it('publishes the edition key the precheck checked for duplicates', () => {
+    expect(edition).toMatch(/PRECHECK_EDITION: \$\{\{ steps\.precheck\.outputs\.edition \}\}/);
+    expect(edition).toMatch(/edition="\$\{INPUT_EDITION:-\$PRECHECK_EDITION\}"/);
   });
 
   it('keeps a 7-day recovery copy and scans for secrets before upload', () => {

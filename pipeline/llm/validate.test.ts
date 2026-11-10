@@ -165,3 +165,42 @@ describe('validator: injection and off-topic output', () => {
     expect(issuesFor(x).join(' ')).toMatch(/off-topic/);
   });
 });
+
+describe('validator: review findings (2026-11-10)', () => {
+  it.each([
+    'With no extra setup, the feature is now available to everyone.',
+    'It is part of the newest version that people can install today.',
+    'Users who upgrade can try it today.',
+  ])('rejects an availability claim on a merged story: %s', (sentence) => {
+    const x = base();
+    x.whyItMatters = sentence;
+    expect(issuesFor(x).join(' ')).toMatch(/released \/ available/);
+  });
+
+  it('still accepts true negation and future tense right before the claim', () => {
+    const x = base();
+    x.whatChanged = 'It has not been released yet, and it will be available once a new version ships.';
+    expect(issuesFor(x)).toEqual([]);
+  });
+
+  it.each(['grab the build from evil-mirror.example.net/install', 'see hxxps://evil[.]example[.]net for details'])(
+    'rejects bare or defanged web addresses: %s',
+    (sentence) => {
+      const x = base();
+      x.whyItMatters += ` You can ${sentence}.`;
+      expect(issuesFor(x).join(' ')).toMatch(/web address that is not in the evidence|obfuscated link/);
+    },
+  );
+
+  it('does not mistake file names for web addresses', () => {
+    const x = base();
+    x.technical = 'The fix touches README.md, next.js config and install.sh scripts on github.com.';
+    expect(issuesFor(x).filter((i) => /web address|obfuscated/.test(i))).toEqual([]);
+  });
+
+  it('rejects credential-shaped strings', () => {
+    const x = base();
+    x.technical = `Send Authorization: Bearer ${'a'.repeat(32)} with each request.`;
+    expect(issuesFor(x).join(' ')).toMatch(/credential-like/);
+  });
+});
