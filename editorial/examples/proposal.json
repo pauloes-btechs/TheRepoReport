@@ -1,0 +1,24 @@
+{
+  "name": "proposal",
+  "note": "Fixture evidence for a fictional repository. Shows an open proposal.",
+  "status": "proposed",
+  "band": "notable",
+  "evidence": "Repository: example-org/paylink\nStatus: Proposed\n- pull_request #77 (open, draft) \"RFC: drop support for the legacy v1 webhook format\" created 2099-03-01 labels=[breaking-change, discussion]: \"Proposal to remove v1 webhooks. Looking for feedback on a migration period.\"",
+  "explanation": {
+    "headline": "paylink maintainers propose dropping the legacy webhook format",
+    "whatHappened": "A draft pull request in paylink proposes removing support for its older v1 webhook format. It is open for feedback and has not been accepted.",
+    "previously": "paylink can send webhooks in the older v1 format for apps that were built against it.",
+    "whatChanged": "Nothing has changed yet. The proposal asks for feedback on how long a migration period should last.",
+    "whyItMatters": "Apps that still receive v1 webhooks would need to switch formats if this goes ahead. The label marks it as a breaking change, so it is worth watching.",
+    "nextConfirmed": "The authors are collecting feedback on a migration period.",
+    "nextSpeculative": "If the proposal is accepted, maintainers might announce a deadline for moving off the old format.",
+    "glossary": [
+      { "term": "webhook", "definition": "A message one service sends to another automatically when something happens, like a payment going through." },
+      { "term": "pull request", "definition": "A proposed change to a project's code that others can review before deciding whether to accept it." },
+      { "term": "breaking change", "definition": "A change that can stop existing apps from working until they are updated." }
+    ],
+    "analogy": "It is like a post office announcing it may stop accepting an old envelope size, and asking customers how much notice they need.",
+    "intermediate": "Draft PR #77 is an RFC to remove the v1 webhook payload format. No code path has changed yet.",
+    "technical": "The draft proposes removing the legacy v1 webhook format and is labeled breaking-change. Discussion centers on the length of a deprecation and migration window."
+  }
+}

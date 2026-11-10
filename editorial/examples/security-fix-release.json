@@ -1,0 +1,24 @@
+{
+  "name": "security-fix-release",
+  "note": "Fixture evidence for a fictional repository. Shows a released security fix.",
+  "status": "released",
+  "band": "critical",
+  "evidence": "Repository: example-org/tinyvault\nStatus: Released\n- advisory: \"Path traversal in backup restore\" severity=critical CVE-2099-0001 published 2099-01-10\n- release v2.4.1 published 2099-01-10: \"Fixes path traversal in the backup restore command (CVE-2099-0001). All users should upgrade.\"",
+  "explanation": {
+    "headline": "tinyvault releases version 2.4.1 to fix a critical backup security flaw",
+    "whatHappened": "The maintainers of tinyvault published version 2.4.1. It fixes a security flaw in the command that restores backups.",
+    "previously": "In earlier versions, a specially made backup file could write files outside the folder it was supposed to stay in.",
+    "whatChanged": "Version 2.4.1 checks where each restored file will go and refuses paths that escape the backup folder.",
+    "whyItMatters": "Anyone who restores backups they did not create could have had important files overwritten. The maintainers rated the flaw critical and ask all users to upgrade.",
+    "nextConfirmed": "The advisory tells all users to upgrade to version 2.4.1.",
+    "nextSpeculative": "Projects that bundle tinyvault might publish their own updates.",
+    "glossary": [
+      { "term": "security advisory", "definition": "A public notice that describes a security flaw and how to fix it." },
+      { "term": "path traversal", "definition": "A trick where a file name like ../../ makes a program reach folders it should not touch." },
+      { "term": "CVE", "definition": "A public ID number given to a known security flaw so everyone can refer to the same problem." }
+    ],
+    "analogy": "It is like a mail room that delivered packages to any address written on the box, even rooms outside the building. Now it checks the address first.",
+    "intermediate": "The restore command joined archive paths to the target folder without normalizing them. Version 2.4.1 rejects entries that resolve outside the target.",
+    "technical": "Archive entry names containing ../ sequences were resolved relative to the restore root without canonicalization (CVE-2099-0001). The 2.4.1 release validates the resolved path prefix before writing."
+  }
+}
