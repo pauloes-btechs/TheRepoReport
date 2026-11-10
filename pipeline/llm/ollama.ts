@@ -1,3 +1,4 @@
+import { availableParallelism } from 'node:os';
 /** Minimal Ollama HTTP client: health check and non-streaming structured chat. */
 import type { FetchLike } from '../../shared/contracts';
 import type { ChatMessage } from './prompt';
@@ -12,6 +13,7 @@ export interface ChatRequestOptions {
   timeoutMs: number;
   fetch: FetchLike;
   numPredict?: number;
+  numThread?: number;
   keepAlive?: string;
 }
 
@@ -104,6 +106,11 @@ export async function checkHealth(
   }
 }
 
+function defaultThreads(): number {
+  const fromEnv = Number(process.env.OLLAMA_NUM_THREAD);
+  return Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : availableParallelism();
+}
+
 /** POST /api/chat with stream:false and a JSON-schema `format`. */
 export async function chat(opts: ChatRequestOptions): Promise<ChatResponse> {
   const controller = new AbortController();
@@ -113,7 +120,14 @@ export async function chat(opts: ChatRequestOptions): Promise<ChatResponse> {
     messages: opts.messages,
     stream: false,
     format: opts.format,
-    options: { temperature: 0.2, num_ctx: 4096, num_predict: opts.numPredict ?? 700 },
+    options: {
+      temperature: 0.2,
+      num_ctx: 4096,
+      // Bounded by the schema's maxLength caps; ~700 tokens worst case.
+      num_predict: opts.numPredict ?? 800,
+      // Ollama defaults to physical cores; hosted runners expose vCPUs.
+      num_thread: opts.numThread ?? defaultThreads(),
+    },
     keep_alive: opts.keepAlive ?? '15m',
   };
   try {
