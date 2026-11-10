@@ -22,8 +22,11 @@ describe('import-watched', () => {
     expect(result.config.repos.at(-1)).toEqual({ repo: 'new/public', category: 'Watched', priority: 2, enabled: true, topics: ['x'] });
   });
 
-  it('formats the file exactly like the hand-written watchlist', () => {
-    expect(formatWatchlist(config)).toBe(readFileSync('config/watchlist.json', 'utf8'));
+  it('writes a compact watchlist that parses back to the same config', () => {
+    const text = formatWatchlist(config);
+    expect(JSON.parse(text)).toEqual(config);
+    // One line per repository keeps diffs readable.
+    expect(text.split('\n').filter((l) => l.trim().startsWith('{ "repo"'))).toHaveLength(config.repos.length);
   });
 
   it('follows Link pagination and sends the token only in the Authorization header', async () => {

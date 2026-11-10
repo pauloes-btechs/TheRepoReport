@@ -8,7 +8,7 @@ import { memoryLogger } from '../util/logger';
 import { FakeSite, SITE, fakeDeps, liveManifest, minimalReport, publish, type FakeOptions } from './__fixtures__/fakes';
 import { checkPublished, runEdition, type RunEditionOptions } from './orchestrate';
 
-const watchlist = WatchlistConfig.parse(JSON.parse(readFileSync('config/watchlist.json', 'utf8')));
+const watchlist = WatchlistConfig.parse(JSON.parse(readFileSync('fixtures/config/watchlist.json', 'utf8')));
 const editorial = EditorialConfig.parse(JSON.parse(readFileSync('config/editorial.json', 'utf8')));
 // 13:30 in New York → afternoon edition.
 const now = new Date('2026-11-10T18:30:00Z');
@@ -23,7 +23,7 @@ function options(extra: Partial<RunEditionOptions> = {}): RunEditionOptions {
     stateFile: join(root, 'state', 'state.json'),
     nextStateFile: join(root, 'state', 'next-state.json'),
     workDir: join(root, 'work'),
-    configDir: 'config',
+    configDir: 'fixtures/config',
     siteUrl: SITE,
     now,
     fetch: site.fetch,
