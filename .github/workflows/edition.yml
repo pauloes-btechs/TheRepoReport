@@ -102,12 +102,15 @@ jobs:
         if: steps.precheck.outputs.proceed == 'true'
         run: |
           MODEL="${INPUT_MODEL:-$(node -p "require('./config/editorial.json').model || 'qwen3:4b-instruct'")}"
-          VOICE="$(node -p "require('./config/editorial.json').voice || 'en_US-lessac-medium'")"
+          VOICE="$(node -p "require('./config/editorial.json').voice || 'kokoro:bm_george|af_heart'")"
           [[ "$MODEL" =~ ^[A-Za-z0-9._:/-]+$ ]] || { echo "::error::invalid model name"; exit 1; }
-          [[ "$VOICE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::invalid voice name"; exit 1; }
+          [[ "$VOICE" =~ ^[A-Za-z0-9._:,|-]+$ ]] || { echo "::error::invalid voice name"; exit 1; }
+          # Piper voice used directly, or as the fallback when Kokoro fails.
+          if [[ "$VOICE" == kokoro:* ]]; then PIPER_VOICE_NAME=en_US-ljspeech-high; else PIPER_VOICE_NAME="$VOICE"; fi
           echo "model=$MODEL" >> "$GITHUB_OUTPUT"
           echo "voice=$VOICE" >> "$GITHUB_OUTPUT"
-          echo "Model: $MODEL  Voice: $VOICE"
+          echo "piper_voice=$PIPER_VOICE_NAME" >> "$GITHUB_OUTPUT"
+          echo "Model: $MODEL  Voice: $VOICE  Piper voice: $PIPER_VOICE_NAME"
 
       # Fail fast on a broken frontend before spending minutes on inference.
       - name: Build frontend
@@ -180,7 +183,7 @@ jobs:
           cache: pip
           cache-dependency-path: scripts/requirements-tts.txt
 
-      - name: Install Piper
+      - name: Install speech engines (Kokoro and Piper)
         if: steps.precheck.outputs.proceed == 'true'
         run: |
           start=$(date +%s)
@@ -195,12 +198,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .work/voices
-          key: piper-voice-${{ steps.settings.outputs.voice }}-v1
+          key: piper-voice-${{ steps.settings.outputs.piper_voice }}-v1
 
       - name: Download Piper voice
         if: steps.precheck.outputs.proceed == 'true' && steps.voice-cache.outputs.cache-hit != 'true'
         env:
-          VOICE: ${{ steps.settings.outputs.voice }}
+          VOICE: ${{ steps.settings.outputs.piper_voice }}
         run: |
           mkdir -p .work/voices
           start=$(date +%s)
@@ -209,6 +212,24 @@ jobs:
           echo "VOICE_DOWNLOAD_SECONDS=$secs" >> "$GITHUB_ENV"
           echo "voice_download_seconds=$secs" >> .work/timings.txt
           ls -la .work/voices
+
+      - name: Restore Kokoro model cache
+        id: kokoro-cache
+        if: steps.precheck.outputs.proceed == 'true' && startsWith(steps.settings.outputs.voice, 'kokoro:')
+        uses: actions/cache@v4
+        with:
+          path: .work/kokoro
+          key: kokoro-v1.0-fp16-v1
+
+      - name: Download Kokoro model (Apache-2.0, from GitHub releases)
+        if: steps.precheck.outputs.proceed == 'true' && startsWith(steps.settings.outputs.voice, 'kokoro:') && steps.kokoro-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .work/kokoro
+          base=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+          for f in kokoro-v1.0.fp16.onnx voices-v1.0.bin; do
+            curl -fsSL --retry 3 -o ".work/kokoro/$f" "$base/$f"
+          done
+          ls -la .work/kokoro
 
       - name: Check FFmpeg
         if: steps.precheck.outputs.proceed == 'true'
@@ -246,6 +267,9 @@ jobs:
           PIPER_VOICE: ${{ steps.settings.outputs.voice }}
           PIPER_DATA_DIR: ${{ github.workspace }}/.work/voices
           PIPER_VOICES_DIR: ${{ github.workspace }}/.work/voices
+          PIPER_FALLBACK_VOICE: ${{ steps.settings.outputs.piper_voice }}
+          KOKORO_MODEL: ${{ github.workspace }}/.work/kokoro/kokoro-v1.0.fp16.onnx
+          KOKORO_VOICES: ${{ github.workspace }}/.work/kokoro/voices-v1.0.bin
           FORCE_FALLBACK: ${{ inputs.force_fallback && '1' || '' }}
           FORCE_NO_AUDIO: ${{ inputs.force_no_audio && '1' || '' }}
           INPUT_REPLAY_HOURS: ${{ inputs.replay_hours }}
@@ -347,7 +371,7 @@ jobs:
             echo "| Voice download (s) | ${VOICE_DOWNLOAD_SECONDS:-cached} |"
             echo "| Inference (s) | $(read_metric 's.metrics?.inferenceSeconds') |"
             echo "| Tokens / s | $(read_metric 's.metrics?.tokensPerSecond') |"
-            echo "| Piper synthesis (s) | $(read_metric 's.metrics?.audioSeconds') |"
+            echo "| Speech synthesis (s) | $(read_metric 's.metrics?.audioSeconds') |"
             echo "| GitHub API requests | $(read_metric 's.metrics?.githubRequests') |"
             echo "| GitHub rate remaining | $(read_metric 's.metrics?.githubRateRemaining') |"
             echo "| Job wall clock (s) | $total |"

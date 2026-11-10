@@ -1,5 +1,5 @@
 /**
- * Narration: Piper speaks each script segment to its own WAV (all segments in one
+ * Narration: Kokoro (default, voices named "kokoro:<id>") or Piper speaks each script segment to its own WAV (all segments in one
  * Piper process when possible, else one process per segment), FFmpeg joins them with
  * short pauses, loudness-normalizes, and encodes a mono MP3 with ID3 chapters.
  *
@@ -10,6 +10,7 @@
 import { existsSync } from 'node:fs';
 import { copyFile, mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import type { Logger, Narrate, NarrateOptions } from '../../shared/contracts';
 import { EDITION_TITLES, parseEditionKey } from '../../shared/edition';
@@ -39,10 +40,22 @@ export const SILENCE_THRESHOLD_DB = -50;
 const DEFAULT_PIPER = ['python3', '-m', 'piper'];
 const DEFAULT_VOICES_DIR = './.work/voices';
 
+/** Voices named "kokoro:<id>" (or a blend "kokoro:am_michael:60,af_heart:40") use Kokoro. */
+export const KOKORO_PREFIX = 'kokoro:';
+const KOKORO_SCRIPT = fileURLToPath(new URL('../../scripts/kokoro_tts.py', import.meta.url));
+const DEFAULT_KOKORO_MODEL = './.work/kokoro/kokoro-v1.0.fp16.onnx';
+const DEFAULT_KOKORO_VOICES = './.work/kokoro/voices-v1.0.bin';
+/** Used when Kokoro is unavailable or fails, so an edition still gets audio. */
+export const DEFAULT_FALLBACK_VOICE = 'en_US-ljspeech-high';
+
+export const isKokoroVoice = (voice: string) => voice.startsWith(KOKORO_PREFIX);
+
 const TIMEOUT_PROBE_MS = 30_000;
 const TIMEOUT_ENCODE_MS = 15 * 60_000;
 /** Model load plus generous per-character synthesis time on a slow CPU. */
 const piperTimeoutMs = (chars: number) => Math.min(30 * 60_000, 120_000 + chars * 200);
+/** Kokoro is a larger model; still about 2× faster than real time on 4 vCPUs. */
+const kokoroTimeoutMs = (chars: number) => Math.min(30 * 60_000, 180_000 + chars * 300);
 
 // ───────────────────────── Tool resolution ─────────────────────────
 
@@ -53,6 +66,12 @@ interface Tools {
   piper: string[];
   piperOverridden: boolean;
   voicesDir: string;
+  /** argv prefix for the Kokoro helper, e.g. ["python3", "scripts/kokoro_tts.py"]. */
+  kokoro: string[];
+  kokoroOverridden: boolean;
+  kokoroModel: string;
+  kokoroVoices: string;
+  fallbackVoice: string;
 }
 
 /** PIPER_CMD may be a JSON array (`["node","/path with space/x.mjs"]`) or a whitespace-separated command. */
@@ -72,7 +91,13 @@ export function parseCommand(value: string): string[] {
 
 function resolveTools(env: NodeJS.ProcessEnv = process.env): Tools {
   const override = env.PIPER_CMD?.trim();
+  const kokoroOverride = env.KOKORO_CMD?.trim();
   return {
+    kokoro: kokoroOverride ? parseCommand(kokoroOverride) : ['python3', KOKORO_SCRIPT],
+    kokoroOverridden: Boolean(kokoroOverride),
+    kokoroModel: resolve(env.KOKORO_MODEL?.trim() || DEFAULT_KOKORO_MODEL),
+    kokoroVoices: resolve(env.KOKORO_VOICES?.trim() || DEFAULT_KOKORO_VOICES),
+    fallbackVoice: env.PIPER_FALLBACK_VOICE?.trim() || DEFAULT_FALLBACK_VOICE,
     ffmpeg: env.FFMPEG_PATH?.trim() || 'ffmpeg',
     ffprobe: env.FFPROBE_PATH?.trim() || 'ffprobe',
     piper: override ? parseCommand(override) : DEFAULT_PIPER,
@@ -380,6 +405,28 @@ async function synthesizeBatch(tools: Tools, voice: string, inputs: string[], wo
   return { wavs: names.map((n) => join(dir, n)) };
 }
 
+/** All segments in one Kokoro process; the helper writes 000.wav, 001.wav, ... in order. */
+async function synthesizeKokoro(tools: Tools, voiceId: string, inputs: string[], workDir: string): Promise<Synthesis> {
+  if (!tools.kokoroOverridden) {
+    for (const file of [tools.kokoroModel, tools.kokoroVoices]) {
+      if (!existsSync(file)) return { error: `Kokoro model file not found at ${file}`, retry: false };
+    }
+  }
+  const dir = join(workDir, 'kokoro-out');
+  await rm(dir, { recursive: true, force: true });
+  await mkdir(dir, { recursive: true });
+  const texts = inputs.map((t) => t.trim());
+  const [command, ...prefix] = tools.kokoro;
+  const args = [...prefix, '--model', tools.kokoroModel, '--voices', tools.kokoroVoices, '--voice', voiceId, '--out-dir', dir];
+  const chars = texts.reduce((n, t) => n + t.length, 0);
+  const result = await run(command!, args, { input: JSON.stringify(texts), timeoutMs: kokoroTimeoutMs(chars) });
+  if (result.code !== 0) return { error: describeFailure('kokoro', result), retry: false };
+  const wavs = texts.map((_, i) => join(dir, `${String(i).padStart(3, '0')}.wav`));
+  const missing = wavs.find((w) => !existsSync(w));
+  if (missing) return { error: `kokoro did not write ${basename(missing)}`, retry: false };
+  return { wavs };
+}
+
 /** One Piper process per segment, sequentially. */
 async function synthesizeEach(tools: Tools, voice: string, inputs: string[], workDir: string): Promise<Synthesis> {
   const wavs: string[] = [];
@@ -431,26 +478,41 @@ export const narrate: Narrate = async (options: NarrateOptions) => {
       if (check.code !== 0) return unavailable(describeFailure(label, check));
     }
 
-    if (!tools.piperOverridden) {
-      const missing = missingVoice(voice, tools.voicesDir);
-      if (missing) return unavailable(missing);
-    }
-
     await mkdir(workDir, { recursive: true });
     const inputs = segments.map((segment) => toPiperInput(segment.spokenText));
     const empty = segments.find((_, i) => inputs[i]!.trim() === '');
     if (empty) return unavailable(`segment "${empty.id}" has no spoken text`);
 
     const t0 = performance.now();
-    let synthesis: Synthesis = { error: 'batch mode disabled', retry: true };
-    if (process.env.PIPER_BATCH !== '0' && segments.length > 1) {
-      synthesis = await synthesizeBatch(tools, voice, inputs, workDir);
-      if ('error' in synthesis) logger.warn('piper batch mode failed; retrying one segment at a time', { reason: synthesis.error });
+    let synthesis: Synthesis = { error: 'not attempted', retry: false };
+    let usedVoice = voice;
+    let mode: 'kokoro' | 'batch' | 'per-segment' = 'kokoro';
+    let engineNote: string | undefined;
+
+    if (isKokoroVoice(voice)) {
+      synthesis = await synthesizeKokoro(tools, voice.slice(KOKORO_PREFIX.length), inputs, workDir);
+      if ('error' in synthesis) {
+        engineNote = `Kokoro failed (${synthesis.error}); narrated with Piper ${tools.fallbackVoice} instead.`;
+        logger.warn('kokoro failed; falling back to Piper', { reason: synthesis.error, fallbackVoice: tools.fallbackVoice });
+        usedVoice = tools.fallbackVoice;
+      }
     }
-    let mode: 'batch' | 'per-segment' = 'batch';
-    if ('error' in synthesis && synthesis.retry) {
-      mode = 'per-segment';
-      synthesis = await synthesizeEach(tools, voice, inputs, workDir);
+
+    if (!isKokoroVoice(usedVoice)) {
+      if (!tools.piperOverridden) {
+        const missing = missingVoice(usedVoice, tools.voicesDir);
+        if (missing) return unavailable(engineNote ? `${engineNote} But ${missing}` : missing);
+      }
+      mode = 'batch';
+      synthesis = { error: 'batch mode disabled', retry: true };
+      if (process.env.PIPER_BATCH !== '0' && segments.length > 1) {
+        synthesis = await synthesizeBatch(tools, usedVoice, inputs, workDir);
+        if ('error' in synthesis) logger.warn('piper batch mode failed; retrying one segment at a time', { reason: synthesis.error });
+      }
+      if ('error' in synthesis && synthesis.retry) {
+        mode = 'per-segment';
+        synthesis = await synthesizeEach(tools, usedVoice, inputs, workDir);
+      }
     }
     const ttsSeconds = (performance.now() - t0) / 1000;
     if ('error' in synthesis) return unavailable(synthesis.error);
@@ -460,7 +522,7 @@ export const narrate: Narrate = async (options: NarrateOptions) => {
     for (const [index, wav] of wavs.entries()) {
       const id = segments[index]!.id;
       const size = existsSync(wav) ? (await stat(wav)).size : 0;
-      if (size <= 44) return unavailable(`piper produced no audio for segment "${id}"`);
+      if (size <= 44) return unavailable(`speech engine produced no audio for segment "${id}"`);
       const duration = await probeDuration(tools.ffprobe, wav);
       if (typeof duration === 'string') return unavailable(duration);
       if (duration <= 0) return unavailable(`segment "${id}" has zero duration`);
@@ -496,7 +558,9 @@ export const narrate: Narrate = async (options: NarrateOptions) => {
 
     logger.info('narration complete', {
       segments: segments.length,
+      engine: mode === 'kokoro' ? 'kokoro' : 'piper',
       piperMode: mode,
+      voice: usedVoice,
       durationSec,
       bytes,
       ttsSeconds: Math.round(ttsSeconds * 100) / 100,
@@ -509,7 +573,7 @@ export const narrate: Narrate = async (options: NarrateOptions) => {
       file: basename(outFile),
       bytes,
       durationSec,
-      voice,
+      voice: usedVoice,
       chapters,
       audioSeconds: elapsed(),
     };
