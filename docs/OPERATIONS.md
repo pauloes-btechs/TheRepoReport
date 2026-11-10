@@ -11,7 +11,7 @@ How TheRepoReport runs in production, how to drive it by hand, and how to recove
 These need a person with admin rights; the workflow cannot do them itself.
 
 1. **Pages source.** Settings → Pages → Build and deployment → Source: **GitHub Actions**. This also creates the `github-pages` environment.
-2. **Workflow permissions.** Settings → Actions → General → Workflow permissions: **Read and write permissions**. The edition workflow asks for `contents: write` (to push the `state` branch), `pages: write` and `id-token: write` (to deploy). The keepalive workflow asks for `actions: write`.
+2. **Workflow permissions.** No change needed. The workflows declare exactly what they need (`contents: write` to push the `state` branch, `pages: write` and `id-token: write` to deploy, `actions: write` for keepalive), which works with the repository default of read-only. Verified by the first production run on 2026-11-10.
 3. **`github-pages` environment.** Settings → Environments → `github-pages` → Deployment branches and tags. Keep it at the default branch (`main`). Manual runs dispatched from any other branch will build but fail at the deploy job, which is expected: state is not advanced when deploy fails.
 4. **Don't protect the `state` branch.** The workflow force-pushes a single commit to it every run. If you add a branch ruleset that covers all branches, exclude `state` from it (or allow force pushes for GitHub Actions).
 5. **Nothing else.** No secrets are needed: the run uses the built-in `GITHUB_TOKEN`. Don't add a personal token to Actions.

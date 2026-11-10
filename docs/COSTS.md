@@ -16,8 +16,8 @@ Limits were checked against GitHub's documentation on 2026-11-10 (links inline).
 | Ollama | Local inference server on the runner | Open source (MIT), downloaded by the official install script | Runner CPU and RAM only (4 vCPU / 16 GB) | https://github.com/ollama/ollama |
 | `qwen3:4b-instruct` (fallback `qwen3:1.7b`) | Headlines and explanations | Open weights, Apache-2.0 | ~2.5 GB / ~1.4 GB download, cached | https://ollama.com/library/qwen3 |
 | Piper (`piper-tts`) | Offline text-to-speech | Open source, **GPL-3.0**. We run it as a separate program (`pip install` and command line). We don't link it into our code or ship it on the site, so its license doesn't extend to this repository. | — | https://github.com/OHF-Voice/piper1-gpl |
-| Piper voice (`en_US-lessac-medium`) | The narrator voice | Free download from the Piper voices repository | **Each voice has its own license. TODO: confirm the lessac voice's model-card license before calling the audio redistributable.** | https://huggingface.co/rhasspy/piper-voices |
-| FFmpeg | WAV concatenation, loudness normalization, MP3 encoding | Preinstalled on `ubuntu-latest` (installed from apt if not) | — | https://ffmpeg.org |
+| Piper voice (`en_US-ljspeech-high`) | The narrator voice | Free download from the Piper voices repository | Trained on LJ Speech, which is public domain. `lessac` voices are avoided: their dataset license is noncommercial. See [VOICES.md](VOICES.md). | https://huggingface.co/rhasspy/piper-voices |
+| FFmpeg | WAV concatenation, loudness normalization, MP3 encoding | Installed from Ubuntu's apt repository each run (not preinstalled on the current `ubuntu-latest` image) | — | https://ffmpeg.org |
 | Domain / TLS | `pauloes-btechs.github.io` | Provided by GitHub Pages | — | — |
 
 **Artifact storage note.** GitHub's billing page frames storage costs around private repositories. It doesn't say outright that artifact storage is free for public repositories, so we couldn't confirm that. To be safe, this project stays inside the smallest published allowance (500 MB on the Free plan). It keeps only 7 days of edition copies plus 1-day state handoffs, and nothing else long-lived.
@@ -35,21 +35,26 @@ These follow from configuration, not from observed runs:
 
 ## Measured usage
 
-> **Not yet measured.** The values below get filled in from the job summaries of the first real Actions runs (see `docs/BENCHMARKS.md`). Until then every cell is a placeholder. Don't quote these as results.
+From real runs on 2026-11-10 (details and run links in [BENCHMARKS.md](BENCHMARKS.md)). Run 1 is the first production edition. Run 4 is a dry run replaying the same 36-hour window after the output-length tuning, so it is what a busy edition costs now.
 
-| Measurement | Limit | Run 1 | Run 2 | Run 3 | Headroom |
-|---|---|---|---|---|---|
-| Job wall clock (min) | 45 (cap) / 360 (GitHub) | TODO-measured | TODO-measured | TODO-measured | TODO |
-| Ollama install (s) | — | TODO-measured | TODO-measured | TODO-measured | — |
-| Model pull, cold / cached (s) | — | TODO-measured | TODO-measured | TODO-measured | — |
-| Inference (s), tokens/s | `inferenceBudgetSeconds` 1200 | TODO-measured | TODO-measured | TODO-measured | TODO |
-| Piper synthesis (s) | — | TODO-measured | TODO-measured | TODO-measured | — |
-| GitHub API requests / remaining | 1,000 per hour | TODO-measured | TODO-measured | TODO-measured | TODO |
-| Peak runner memory (MB) | 16 GB | TODO-measured | TODO-measured | TODO-measured | TODO |
-| MP3 size (MB) / duration (min) | — | TODO-measured | TODO-measured | TODO-measured | — |
-| Published site size (MB) | 1,024 | TODO-measured | TODO-measured | TODO-measured | TODO |
-| Actions cache used (GB) | 10 | TODO-measured | TODO-measured | TODO-measured | TODO |
-| Artifact storage (MB) | 500 (conservative) | TODO-measured | TODO-measured | TODO-measured | TODO |
-| Pages bandwidth (GB/month) | 100 (soft) | Not observable directly; estimate from site size × runs + listener downloads | | | TODO |
+| Measurement | Limit | Run 1 (production) | Run 4 (tuned replay) | Headroom |
+|---|---|---:|---:|---|
+| Job wall clock | 45 min cap (GitHub: 6 h) | ~8.2 min | ~9.5 min | Large. Inference budget is 20 min. |
+| Ollama install | — | 67 s | 69 s | — |
+| Model pull (2.5 GB) | — | 9 s cold | 1 s cached | — |
+| Inference | 1,200 s budget | 180 s, 1 story | 266 s, 3 stories | About 60 s per story → ~15 stories fit |
+| Tokens / second | — | 5.7 | 7.1 | — |
+| Piper synthesis | — | 72 s for 3.4 min audio | 99 s for 4.9 min audio | — |
+| GitHub API requests / remaining | 1,000 / hour | 129 / 4,867* | 129 / 4,466* | About 13% of the hourly limit per run |
+| Peak runner memory | 16 GB | 4.7 GB | 5.1 GB | About 3× |
+| MP3 size / duration | — | 1.6 MB / 3.4 min | 2.4 MB / 4.9 min | About 0.48 MB per minute |
+| Published site size | 1 GB | 2.2 MB | 2.9 MB (dry run) | Full 21-edition archive ≈ 60–120 MB |
+| Actions cache | 10 GB | Model ~2.5 GB + voice + npm (~40 MB) + pip | same | About 3× |
+
+\* The token reported a 5,000/hour ceiling in practice; the documented `GITHUB_TOKEN` figure is 1,000/hour per repository, so headroom is computed against 1,000.
+
+**Pages bandwidth** isn't observable directly. Our own carry-forward downloads are the archive size per run: at ~60–120 MB for a full week, that's 5–11 GB a month, well under the 100 GB soft limit.
+
+**Total recurring cost: $0.** No paid service is used.
 
 How to fill it in: each run's job summary has a **Runner measurements** table and a pipeline metrics table. Cache size is under Actions → Caches. Artifact storage is under Settings → Billing (or the run pages).
