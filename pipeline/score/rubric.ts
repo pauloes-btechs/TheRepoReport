@@ -185,14 +185,6 @@ function starBand(stars: number): number {
 
 function ecosystem(s: Story): Signal[] {
   const signals: Signal[] = [];
-  const stars = Math.max(0, ...s.events.map((e) => e.repoStars ?? 0));
-  if (starBand(stars) > 0) {
-    signals.push({
-      points: starBand(stars),
-      reason: `Widely used repository (${stars.toLocaleString('en-US')} stars)`,
-      evidenceUrl: `https://github.com/${s.repo}`,
-    });
-  }
   const shipped = stableReleases(s)[0] ?? s.events.find((e) => e.kind === 'advisory');
   const merged = s.events.find((e) => e.kind === 'pull_request' && e.state === 'merged');
   if (shipped) {
@@ -206,6 +198,16 @@ function ecosystem(s: Story): Signal[] {
       points: engagement(busiest) >= 50 ? 3 : 1,
       reason: `Community attention (${engagement(busiest)} comments and reactions)`,
       evidenceUrl: busiest.url,
+    });
+  }
+  // Popularity only amplifies a change that already matters downstream (it
+  // shipped, merged, or drew attention). Stars alone never earn points.
+  const stars = Math.max(0, ...s.events.map((e) => e.repoStars ?? 0));
+  if (signals.length > 0 && starBand(stars) > 0) {
+    signals.push({
+      points: starBand(stars),
+      reason: `Change reaches a widely used repository (${stars.toLocaleString('en-US')} stars)`,
+      evidenceUrl: `https://github.com/${s.repo}`,
     });
   }
   return signals;

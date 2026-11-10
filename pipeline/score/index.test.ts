@@ -153,14 +153,13 @@ describe('scoreStories rubric', () => {
     );
   });
 
-  it('awards points only on evidence: a quiet issue in a huge repo gets stars and nothing else', () => {
+  it('awards points only on evidence: stars alone earn nothing', () => {
     const [scored] = scoreStories([storyOf([issue(REPO, 1, { title: 'Question', repoStars: 250_000 })], 'proposed')], {
       editorial,
       repos: [],
     });
-    expect(scored!.score.total).toBe(6);
-    expect(dim(scored!, 'ecosystem').signals.map((s) => s.points)).toEqual([6]);
-    for (const key of ['security', 'breaking', 'capability', 'reliability', 'relevance']) {
+    expect(scored!.score.total).toBe(0);
+    for (const key of ['security', 'breaking', 'capability', 'reliability', 'ecosystem', 'relevance']) {
       expect(dim(scored!, key).awarded).toBe(0);
     }
   });
