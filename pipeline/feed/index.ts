@@ -43,7 +43,7 @@ const el = (name: string, text: string) => `<${name}>${xmlEscape(oneLine(text))}
 // ───────────────────────── Items ─────────────────────────
 
 export function feedGuid(key: string): string {
-  return `therepreport-${key}`;
+  return `thereporeport-${key}`;
 }
 
 function headlineOf(edition: ManifestEdition, report: EditionReport | undefined): string {

@@ -63,7 +63,7 @@ export const EditorialConfig = z.object({
   maxStories: z.number().int().positive().default(8),
   targetMinutes: z.object({ min: z.number().positive(), max: z.number().positive() }),
   retentionDays: z.number().int().positive().default(7),
-  voice: z.string().default('en_US-lessac-medium'),
+  voice: z.string().default('en_US-ljspeech-high'),
   model: z.string().default('qwen3:4b-instruct'),
   fallbackModel: z.string().optional(),
   inferenceBudgetSeconds: z.number().positive().default(1200),

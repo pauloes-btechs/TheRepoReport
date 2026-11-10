@@ -4,14 +4,20 @@ TheRepoReport narrates each edition with [Piper](https://github.com/OHF-Voice/pi
 neural text-to-speech engine, then FFmpeg joins, normalizes and encodes the result
 (`pipeline/audio`).
 
-## Default voice: `en_US-lessac-medium`
+## Default voice: `en_US-ljspeech-high`
 
 | | |
 |---|---|
-| Language | U.S. English, single speaker |
-| Quality tier | medium (22,050 Hz output) |
-| Model size | about 63 MB (`.onnx`) plus a 6 KB config (`.onnx.json`) |
+| Language | U.S. English, single speaker (female) |
+| Quality tier | high (22,050 Hz output) |
 | Configured in | `config/editorial.json` → `voice` |
+| Dataset | [LJ Speech](https://keithito.com/LJ-Speech-Dataset/), public domain |
+
+This voice was chosen because its training data is public domain, so publishing a public podcast feed
+raises no voice-license question. The earlier candidate, `en_US-lessac-medium`, was trained on the
+Blizzard Challenge 2013 Lessac data, which is under the Lessac *Noncommercial* Use license
+(<https://www.cstr.inf.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013_software/license.html>);
+it, and every English voice fine-tuned from it, is avoided for that reason.
 
 ### Where voices come from
 
@@ -21,50 +27,25 @@ Piper's own tool and never commits them to git:
 
 ```sh
 pip install piper-tts
-python3 -m piper.download_voices en_US-lessac-medium --data-dir .work/voices
+python3 -m piper.download_voices en_US-ljspeech-high --data-dir .work/voices
 ```
 
 `narrate()` looks for `<PIPER_VOICES_DIR>/<voice>.onnx` and `<voice>.onnx.json`
 (`PIPER_VOICES_DIR` defaults to `./.work/voices`, which is git-ignored). If the files are missing it
 returns `available: false` with the download command in `unavailableReason`; the edition is still
-published without audio. In Actions, cache `.work/voices` with `actions/cache` so the download
+published without audio. In Actions, `.work/voices` is cached with `actions/cache` so the download
 happens once.
-
-An older packaging of the same voice is also attached to the archived
-[`rhasspy/piper` v0.0.2 release](https://github.com/rhasspy/piper/releases/tag/v0.0.2)
-(`voice-en-us-lessac-medium.tar.gz`, files named `en-us-lessac-medium.*`; rename them to
-`en_US-lessac-medium.*`). Piper 1.8.0 loads it. That copy was only used for the local smoke test
-because Hugging Face was not reachable from the build sandbox. Production should use
-`download_voices`.
 
 ### Licenses
 
 **Engine: GPL-3.0.** `piper1-gpl` is licensed GPL-3.0. TheRepoReport runs it only as a separate
 program (`python3 -m piper …` through `child_process.spawn`, with text on stdin and WAV files out). Our
 code does not import, link, bundle or redistribute it, so the MIT license of this repository is
-unaffected. Keep it that way. Do not add Python helpers to this repo that `import piper`. That is why
+unaffected. Keep it that way: do not add Python helpers to this repo that `import piper`. That is why
 the batch mode uses the CLI's `--output-dir` option rather than the Python API.
 
-**Voice: per its model card. Confirm this before the feed is promoted.** The `MODEL_CARD` shipped with the
-voice (checked from the v0.0.2 release archive) says:
-
-> Dataset: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/
-> License: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html
-> Training: Trained from scratch.
-
-So the voice is governed by the **Lessac Technologies Blizzard Challenge 2013 data license**, not
-by an open-source license. Neither that license page nor the Hugging Face copy of the model card could
-be fetched from the build sandbox, so the terms were **not verified here**. This voice is widely
-reported to be restricted to non-commercial use. TheRepoReport is free and carries no ads, but a
-public podcast feed is distribution, so read the terms. To confirm:
-
-1. Open `https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/lessac/medium/MODEL_CARD`
-   and check that it still points to the same dataset license.
-2. Read the CSTR license page linked above. Check (a) whether it allows non-commercial use,
-   (b) whether it allows publicly distributing audio synthesized from a model trained on the
-   data, and (c) any attribution it requires.
-3. Record the result here. If the terms do not fit, switch `voice` in `config/editorial.json` to one
-   of the alternatives below. No code change is needed.
+**Voice:** check the `MODEL_CARD` next to the voice in `rhasspy/piper-voices` whenever you change
+voices. Avoid voices trained on, or fine-tuned from, lessac.
 
 ## Alternatives (English)
 
@@ -74,7 +55,7 @@ before switching.
 
 | Voice | Notes |
 |---|---|
-| `en_US-ljspeech-high` (or `-medium`) | Trained on the LJ Speech dataset, which is public domain. Likely the least restrictive choice. Female U.S. voice. `high` is slower to synthesize and larger. |
+| `en_US-ljspeech-medium` | Same public-domain dataset, smaller and faster than `high`. |
 | `en_US-ryan-high` (or `-medium`) | Male U.S. voice, clear newsreader delivery. Check the dataset license on the model card. |
 | `en_GB-alan-medium` | Male British voice. Check the dataset license on the model card. |
 
@@ -83,7 +64,7 @@ Multi-speaker voices (for example `en_US-libritts_r-medium`) also work, but they
 
 ## Measured performance (local smoke test)
 
-The test machine was a 2-vCPU sandbox (the Actions runner has 4) with Piper 1.8.0, `en_US-lessac-medium`, and a 9-segment
+The test machine was a 2-vCPU sandbox (the Actions runner has 4) with Piper 1.8.0, the `lessac-medium` voice (the only one reachable from the sandbox; the `high` default is somewhat slower), and a 9-segment
 script of about 3.7 minutes:
 
 | Mode | Piper wall time | Real-time factor | Encode (loudnorm + MP3) | Total `narrate()` |

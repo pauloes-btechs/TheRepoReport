@@ -205,9 +205,9 @@ describe('buildFeed', () => {
     const its = items(xml);
     expect(its).toHaveLength(3);
     expect(its.map((i) => all(i, 'guid')[0])).toEqual([feedGuid(A), feedGuid(B), feedGuid(D)]);
-    expect(feedGuid(A)).toBe('therepreport-2026-11-10-afternoon');
+    expect(feedGuid(A)).toBe('thereporeport-2026-11-10-afternoon');
     expect(xml).not.toContain('No audio here');
-    expect(xml).toContain('<guid isPermaLink="false">therepreport-2026-11-10-afternoon</guid>');
+    expect(xml).toContain('<guid isPermaLink="false">thereporeport-2026-11-10-afternoon</guid>');
     // Same input, same output.
     expect(buildFeed({ manifest: manifest(editions), reports, siteUrl: SITE_URL })).toBe(xml);
   });
