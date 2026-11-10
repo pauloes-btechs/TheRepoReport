@@ -1,0 +1,123 @@
+{
+  "name": "merged-overclaim",
+  "description": "A merged routing change where the model output wrongly claims it is released and available.",
+  "expectedRank": 4,
+  "story": {
+    "id": "story:lightningnetwork/lnd#10301",
+    "repo": "lightningnetwork/lnd",
+    "title": "routing: cache fee estimates between path finding attempts",
+    "status": "merged",
+    "statusEvidenceUrl": "https://github.com/lightningnetwork/lnd/pull/10301",
+    "categories": [
+      "Bitcoin",
+      "lightning"
+    ],
+    "firstSeen": "2026-11-02T08:00:00Z",
+    "updatedAt": "2026-11-09T15:30:00Z",
+    "events": [
+      {
+        "body": "Caches fee estimates for the duration of a payment attempt so retries do not recompute them. Benchmarks show path finding about 30% faster on large graphs.",
+        "labels": [
+          "routing",
+          "performance"
+        ],
+        "refs": [],
+        "id": "pull_request:lightningnetwork/lnd#10301",
+        "kind": "pull_request",
+        "repo": "lightningnetwork/lnd",
+        "number": 10301,
+        "title": "routing: cache fee estimates between path finding attempts",
+        "url": "https://github.com/lightningnetwork/lnd/pull/10301",
+        "state": "merged",
+        "createdAt": "2026-11-02T08:00:00Z",
+        "updatedAt": "2026-11-09T15:30:00Z",
+        "mergedAt": "2026-11-09T15:30:00Z"
+      }
+    ],
+    "score": {
+      "total": 41,
+      "band": "notable",
+      "dimensions": [
+        {
+          "key": "security",
+          "max": 25,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "breaking",
+          "max": 20,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "capability",
+          "max": 20,
+          "awarded": 8,
+          "signals": [
+            {
+              "points": 8,
+              "reason": "Internal routing change"
+            }
+          ]
+        },
+        {
+          "key": "reliability",
+          "max": 15,
+          "awarded": 14,
+          "signals": [
+            {
+              "points": 14,
+              "reason": "Performance improvement with benchmark",
+              "evidenceUrl": "https://github.com/lightningnetwork/lnd/pull/10301"
+            }
+          ]
+        },
+        {
+          "key": "ecosystem",
+          "max": 10,
+          "awarded": 9,
+          "signals": [
+            {
+              "points": 9,
+              "reason": "Major Lightning implementation"
+            }
+          ]
+        },
+        {
+          "key": "relevance",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Matches topics: bitcoin"
+            }
+          ]
+        }
+      ],
+      "confidence": "medium",
+      "confidenceReason": "Single primary source (merged pull request)",
+      "ranksAboveNext": "A merged performance change outranks an open proposal"
+    }
+  },
+  "cannedOutput": {
+    "headline": "lnd releases faster payment routing",
+    "whatHappened": "The lnd team released a new version with faster routing. You can now upgrade to get payments that find their path about 30% faster.",
+    "previously": "lnd recomputed fee estimates every time it retried a payment.",
+    "whatChanged": "Fee estimates are now cached during a payment attempt.",
+    "whyItMatters": "Lightning node operators get quicker payments right away, and the update is now available to everyone.",
+    "nextConfirmed": "No next step has been announced.",
+    "nextSpeculative": "",
+    "glossary": [
+      {
+        "term": "routing",
+        "definition": "Finding a path through the network for a payment."
+      }
+    ],
+    "analogy": "",
+    "intermediate": "Pull request #10301 caches fee estimates during path finding.",
+    "technical": "Fee estimates are cached for the duration of a payment attempt."
+  },
+  "expectValid": false
+}

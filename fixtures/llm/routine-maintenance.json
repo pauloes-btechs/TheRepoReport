@@ -1,0 +1,97 @@
+{
+  "name": "routine-maintenance",
+  "description": "Routine dependency bumps in a popular repository. No canned output, so the deterministic fallback is used.",
+  "expectedRank": 7,
+  "story": {
+    "id": "story:facebook/react#35120",
+    "repo": "facebook/react",
+    "title": "Bump development dependencies",
+    "status": "merged",
+    "statusEvidenceUrl": "https://github.com/facebook/react/pull/35120",
+    "categories": [
+      "Web"
+    ],
+    "firstSeen": "2026-11-09T12:00:00Z",
+    "updatedAt": "2026-11-09T13:00:00Z",
+    "events": [
+      {
+        "body": "Routine update of dev-only packages. No runtime changes.",
+        "labels": [
+          "dependencies"
+        ],
+        "refs": [],
+        "id": "pull_request:facebook/react#35120",
+        "kind": "pull_request",
+        "repo": "facebook/react",
+        "number": 35120,
+        "title": "Bump development dependencies",
+        "url": "https://github.com/facebook/react/pull/35120",
+        "state": "merged",
+        "createdAt": "2026-11-09T12:00:00Z",
+        "updatedAt": "2026-11-09T13:00:00Z",
+        "mergedAt": "2026-11-09T13:00:00Z",
+        "repoStars": 240000
+      }
+    ],
+    "score": {
+      "total": 12,
+      "band": "routine",
+      "dimensions": [
+        {
+          "key": "security",
+          "max": 25,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "breaking",
+          "max": 20,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "capability",
+          "max": 20,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "reliability",
+          "max": 15,
+          "awarded": 2,
+          "signals": [
+            {
+              "points": 2,
+              "reason": "Keeps tooling current"
+            }
+          ]
+        },
+        {
+          "key": "ecosystem",
+          "max": 10,
+          "awarded": 6,
+          "signals": [
+            {
+              "points": 6,
+              "reason": "Widely used UI library"
+            }
+          ]
+        },
+        {
+          "key": "relevance",
+          "max": 10,
+          "awarded": 4,
+          "signals": [
+            {
+              "points": 4,
+              "reason": "Matches topics: developer-tools"
+            }
+          ]
+        }
+      ],
+      "confidence": "high",
+      "confidenceReason": "Merged pull request"
+    }
+  },
+  "expectValid": true
+}

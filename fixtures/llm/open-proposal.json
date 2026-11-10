@@ -1,0 +1,136 @@
+{
+  "name": "open-proposal",
+  "description": "An open pull request proposing a new node option.",
+  "expectedRank": 5,
+  "story": {
+    "id": "story:bitcoin/bitcoin#33790",
+    "repo": "bitcoin/bitcoin",
+    "title": "p2p: add option to limit inbound connections per network",
+    "status": "proposed",
+    "statusEvidenceUrl": "https://github.com/bitcoin/bitcoin/pull/33790",
+    "categories": [
+      "Bitcoin",
+      "bitcoin"
+    ],
+    "firstSeen": "2026-11-08T11:00:00Z",
+    "updatedAt": "2026-11-10T09:00:00Z",
+    "events": [
+      {
+        "body": "Adds a -maxinboundpernet option so node operators can cap how many inbound peers come from a single network type (IPv4, IPv6, Tor, I2P). Motivation: reduce the chance that one network fills all inbound slots. Feedback welcome on the default.",
+        "labels": [
+          "P2P",
+          "Feature"
+        ],
+        "refs": [],
+        "id": "pull_request:bitcoin/bitcoin#33790",
+        "kind": "pull_request",
+        "repo": "bitcoin/bitcoin",
+        "number": 33790,
+        "title": "p2p: add option to limit inbound connections per network",
+        "url": "https://github.com/bitcoin/bitcoin/pull/33790",
+        "state": "open",
+        "draft": false,
+        "createdAt": "2026-11-08T11:00:00Z",
+        "updatedAt": "2026-11-10T09:00:00Z",
+        "comments": 12
+      }
+    ],
+    "score": {
+      "total": 38,
+      "band": "notable",
+      "dimensions": [
+        {
+          "key": "security",
+          "max": 25,
+          "awarded": 8,
+          "signals": [
+            {
+              "points": 8,
+              "reason": "Hardening against connection slot exhaustion"
+            }
+          ]
+        },
+        {
+          "key": "breaking",
+          "max": 20,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "capability",
+          "max": 20,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Proposed new node option",
+              "evidenceUrl": "https://github.com/bitcoin/bitcoin/pull/33790"
+            }
+          ]
+        },
+        {
+          "key": "reliability",
+          "max": 15,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "ecosystem",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Bitcoin reference implementation"
+            }
+          ]
+        },
+        {
+          "key": "relevance",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Matches topics: bitcoin, security; priority 3 repository"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "confidenceReason": "Open proposal; no review outcome yet",
+      "ranksAboveNext": "An open proposal still outranks a documentation change"
+    }
+  },
+  "cannedOutput": {
+    "headline": "Bitcoin Core proposal would limit inbound connections per network",
+    "whatHappened": "A pull request in bitcoin proposes a new option, -maxinboundpernet, for people who run Bitcoin nodes. It is open for review and has not been accepted.",
+    "previously": "A node has a fixed number of slots for other computers that connect to it. Nothing stops one type of network from filling all of them.",
+    "whatChanged": "Nothing has changed in the code yet. The proposal would let operators cap how many incoming connections come from one network type, such as Tor or IPv4.",
+    "whyItMatters": "If one network can fill every slot, a node is easier to isolate from honest peers. This option would give node operators another way to protect their nodes.",
+    "nextConfirmed": "The author is asking for feedback on the default setting.",
+    "nextSpeculative": "Reviewers might ask for changes before deciding whether to accept it.",
+    "glossary": [
+      {
+        "term": "node",
+        "definition": "A computer that runs Bitcoin software and shares transactions and blocks with others."
+      },
+      {
+        "term": "inbound connection",
+        "definition": "A connection that another computer starts to your node."
+      },
+      {
+        "term": "Tor",
+        "definition": "A network that hides where internet traffic comes from."
+      },
+      {
+        "term": "pull request",
+        "definition": "A proposed code change that others review before deciding whether to accept it."
+      }
+    ],
+    "analogy": "It is like a restaurant deciding that no single tour group can take every table, so other guests can still get a seat.",
+    "intermediate": "Pull request #33790 proposes a -maxinboundpernet option that caps inbound peers per network type: IPv4, IPv6, Tor and I2P.",
+    "technical": "The proposed -maxinboundpernet option bounds inbound peer slots per network class to reduce the risk that one network type exhausts inbound capacity. The default value is still under discussion."
+  },
+  "expectValid": true
+}
