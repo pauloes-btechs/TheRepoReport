@@ -60,7 +60,7 @@ jobs:
           git add config/watchlist.json config/editorial.json
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "The submitted configuration matches what is already on main." >> "$RUNNER_TEMP/summary.md"
+            echo "Nothing to save: the submitted configuration already matches main." > "$RUNNER_TEMP/summary.md"
             exit 0
           fi
           git commit -m "config: update from Settings page (#$ISSUE_NUMBER)"
