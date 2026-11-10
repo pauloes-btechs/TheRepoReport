@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "key": "2026-11-09-evening",
+  "date": "2026-11-09",
+  "edition": "evening",
+  "generatedAt": "2026-11-10T00:21:00Z",
+  "windowStart": "2026-11-09T18:20:00Z",
+  "windowEnd": "2026-11-10T00:15:30Z",
+  "summarization": "fallback",
+  "quiet": false,
+  "stories": [
+    {
+      "id": "bitcoin-core-30-1-rc",
+      "repo": "bitcoin/bitcoin",
+      "status": "released",
+      "statusEvidenceUrl": "https://github.com/bitcoin/bitcoin/releases/tag/v30.1rc1",
+      "categories": [
+        "bitcoin"
+      ],
+      "score": {
+        "total": 38,
+        "band": "notable",
+        "dimensions": [
+          {
+            "key": "security",
+            "max": 25,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "breaking",
+            "max": 20,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "capability",
+            "max": 20,
+            "awarded": 6,
+            "signals": [
+              {
+                "points": 6,
+                "reason": "Minor RPC additions"
+              }
+            ]
+          },
+          {
+            "key": "reliability",
+            "max": 15,
+            "awarded": 12,
+            "signals": [
+              {
+                "points": 12,
+                "reason": "Release candidate lists wallet and networking fixes",
+                "evidenceUrl": "https://github.com/bitcoin/bitcoin/releases/tag/v30.1rc1"
+              }
+            ]
+          },
+          {
+            "key": "ecosystem",
+            "max": 10,
+            "awarded": 10,
+            "signals": [
+              {
+                "points": 10,
+                "reason": "Reference Bitcoin implementation"
+              }
+            ]
+          },
+          {
+            "key": "relevance",
+            "max": 10,
+            "awarded": 10,
+            "signals": [
+              {
+                "points": 10,
+                "reason": "High-priority repository on topic bitcoin"
+              }
+            ]
+          }
+        ],
+        "confidence": "high",
+        "confidenceReason": "Published release with tag and notes.",
+        "ranksAboveNext": "because the release is published (+12 reliability) while the next story is a merged change only"
+      },
+      "explanation": {
+        "headline": "bitcoin/bitcoin: release v30.1rc1 published",
+        "whatHappened": "bitcoin/bitcoin published release v30.1rc1. The release notes list wallet and networking fixes.",
+        "previously": "The previous published release on the stable line was v30.0.",
+        "whatChanged": "A release candidate tagged v30.1rc1 is available for testing.",
+        "whyItMatters": "Release candidates let node operators test fixes before the final release. See the release notes for details.",
+        "nextConfirmed": "The release candidate is published.",
+        "nextSpeculative": "",
+        "glossary": [
+          {
+            "term": "Release candidate",
+            "definition": "A test version that may become the final release if no problems are found."
+          }
+        ],
+        "analogy": "",
+        "intermediate": "",
+        "technical": "",
+        "source": "fallback",
+        "validationNotes": [
+          "Model output exceeded the time budget; deterministic template used."
+        ]
+      },
+      "links": [
+        {
+          "label": "Bitcoin Core v30.1rc1",
+          "url": "https://github.com/bitcoin/bitcoin/releases/tag/v30.1rc1",
+          "kind": "release"
+        }
+      ],
+      "updatedAt": "2026-11-09T21:10:00Z"
+    },
+    {
+      "id": "supabase-storage-signed-urls",
+      "repo": "supabase/supabase",
+      "status": "merged",
+      "statusEvidenceUrl": "https://github.com/supabase/supabase/pull/40211",
+      "categories": [
+        "database",
+        "backend"
+      ],
+      "score": {
+        "total": 35,
+        "band": "notable",
+        "dimensions": [
+          {
+            "key": "security",
+            "max": 25,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "breaking",
+            "max": 20,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "capability",
+            "max": 20,
+            "awarded": 14,
+            "signals": [
+              {
+                "points": 14,
+                "reason": "Pull request adds a new storage option",
+                "evidenceUrl": "https://github.com/supabase/supabase/pull/40211"
+              }
+            ]
+          },
+          {
+            "key": "reliability",
+            "max": 15,
+            "awarded": 6,
+            "signals": [
+              {
+                "points": 6,
+                "reason": "Adds tests for expiry handling"
+              }
+            ]
+          },
+          {
+            "key": "ecosystem",
+            "max": 10,
+            "awarded": 7,
+            "signals": [
+              {
+                "points": 7,
+                "reason": "Popular backend platform"
+              }
+            ]
+          },
+          {
+            "key": "relevance",
+            "max": 10,
+            "awarded": 8,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "Normal-priority repository on topic database"
+              }
+            ]
+          }
+        ],
+        "confidence": "low",
+        "confidenceReason": "Single merged pull request; no release yet."
+      },
+      "explanation": {
+        "headline": "supabase/supabase: pull request #40211 merged",
+        "whatHappened": "supabase/supabase merged pull request #40211, titled \"Storage: configurable expiry for signed upload URLs\".",
+        "previously": "The pull request was open for review.",
+        "whatChanged": "The change is merged into the main branch. It is not yet part of a release.",
+        "whyItMatters": "Merged changes usually reach users in a later release. See the pull request for details.",
+        "nextConfirmed": "",
+        "nextSpeculative": "",
+        "glossary": [],
+        "analogy": "",
+        "intermediate": "",
+        "technical": "",
+        "source": "fallback",
+        "validationNotes": [
+          "Model output exceeded the time budget; deterministic template used."
+        ]
+      },
+      "links": [
+        {
+          "label": "Storage: configurable expiry for signed upload URLs (#40211)",
+          "url": "https://github.com/supabase/supabase/pull/40211",
+          "kind": "pull_request"
+        }
+      ],
+      "updatedAt": "2026-11-09T20:02:00Z"
+    }
+  ],
+  "worthWatching": [],
+  "transcript": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "title": "Good evening",
+      "text": "Good evening. This is TheRepoReport for Monday, November 9. Tonight’s stories were summarized from templates.",
+      "spokenText": "Good evening. This is TheRepoReport for Monday, November 9. Tonight’s stories were summarized from templates."
+    },
+    {
+      "id": "lead",
+      "kind": "lead",
+      "title": "bitcoin/bitcoin: release v30.1rc1 published",
+      "text": "bitcoin/bitcoin published release v30.1rc1. The release notes list wallet and networking fixes. Release candidates let node operators test fixes before the final release. See the release notes for details.",
+      "spokenText": "bitcoin/bitcoin published release v30.1rc1. The release notes list wallet and networking fixes. Release candidates let node operators test fixes before the final release. See the release notes for details.",
+      "storyId": "bitcoin-core-30-1-rc"
+    },
+    {
+      "id": "story-2",
+      "kind": "story",
+      "title": "supabase/supabase: pull request #40211 merged",
+      "text": "supabase/supabase merged pull request #40211, titled \"Storage: configurable expiry for signed upload URLs\". Merged changes usually reach users in a later release. See the pull request for details.",
+      "spokenText": "supabase/supabase merged pull request #40211, titled \"Storage: configurable expiry for signed upload URLs\". Merged changes usually reach users in a later release. See the pull request for details.",
+      "storyId": "supabase-storage-signed-urls"
+    },
+    {
+      "id": "closing",
+      "kind": "closing",
+      "title": "Closing",
+      "text": "That is the evening edition. The next one is at 7:15 AM Eastern.",
+      "spokenText": "That is the evening edition. The next one is at 7:15 AM Eastern."
+    }
+  ],
+  "audio": {
+    "available": false,
+    "chapters": [],
+    "unavailableReason": "The speech engine failed to start on the build machine, so only the written edition was published."
+  },
+  "metrics": {
+    "githubRequests": 188,
+    "githubRateRemaining": 812,
+    "reposScanned": 23,
+    "eventsCollected": 22,
+    "storiesConsidered": 6,
+    "modelLoadSeconds": 39.8,
+    "inferenceSeconds": 1200,
+    "totalSeconds": 1390,
+    "peakMemoryMb": 4980
+  }
+}

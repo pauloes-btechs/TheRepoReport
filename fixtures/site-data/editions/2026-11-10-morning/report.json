@@ -1,0 +1,640 @@
+{
+  "schemaVersion": 1,
+  "key": "2026-11-10-morning",
+  "date": "2026-11-10",
+  "edition": "morning",
+  "generatedAt": "2026-11-10T12:31:00Z",
+  "windowStart": "2026-11-10T00:22:00Z",
+  "windowEnd": "2026-11-10T12:15:40Z",
+  "summarization": "llm",
+  "model": "qwen3:4b-instruct",
+  "quiet": false,
+  "stories": [
+    {
+      "id": "ollama-ollama-model-import-path",
+      "repo": "ollama/ollama",
+      "status": "released",
+      "statusEvidenceUrl": "https://github.com/ollama/ollama/releases/tag/v0.13.2",
+      "previousStatus": "merged",
+      "categories": [
+        "ai",
+        "security"
+      ],
+      "score": {
+        "total": 76,
+        "band": "major",
+        "dimensions": [
+          {
+            "key": "security",
+            "max": 25,
+            "awarded": 25,
+            "signals": [
+              {
+                "points": 20,
+                "reason": "Security advisory rated high severity",
+                "evidenceUrl": "https://github.com/ollama/ollama/security/advisories/GHSA-7x2q-fixture"
+              },
+              {
+                "points": 5,
+                "reason": "Fix references the advisory directly",
+                "evidenceUrl": "https://github.com/ollama/ollama/pull/9811"
+              }
+            ]
+          },
+          {
+            "key": "breaking",
+            "max": 20,
+            "awarded": 12,
+            "signals": [
+              {
+                "points": 12,
+                "reason": "Import now rejects archives that were previously accepted",
+                "evidenceUrl": "https://github.com/ollama/ollama/pull/9811"
+              }
+            ]
+          },
+          {
+            "key": "capability",
+            "max": 20,
+            "awarded": 8,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "Adds a verify option to model import",
+                "evidenceUrl": "https://github.com/ollama/ollama/pull/9811"
+              }
+            ]
+          },
+          {
+            "key": "reliability",
+            "max": 15,
+            "awarded": 12,
+            "signals": [
+              {
+                "points": 12,
+                "reason": "Release notes list a crash fix for interrupted pulls",
+                "evidenceUrl": "https://github.com/ollama/ollama/releases/tag/v0.13.2"
+              }
+            ]
+          },
+          {
+            "key": "ecosystem",
+            "max": 10,
+            "awarded": 9,
+            "signals": [
+              {
+                "points": 9,
+                "reason": "Widely used runtime: dependency of this newsroom and many local AI tools"
+              }
+            ]
+          },
+          {
+            "key": "relevance",
+            "max": 10,
+            "awarded": 10,
+            "signals": [
+              {
+                "points": 10,
+                "reason": "High-priority repository on topics ai and security"
+              }
+            ]
+          }
+        ],
+        "confidence": "high",
+        "confidenceReason": "Advisory, pull request and release notes agree on the fix and the version.",
+        "ranksAboveNext": "because it carries a high-severity security fix (+25 security) that the next story has none of"
+      },
+      "explanation": {
+        "headline": "Ollama ships a fix for a model-import flaw that could write files outside its folder",
+        "whatHappened": "Ollama, the tool that runs AI models on your own computer, published version 0.13.2. It fixes a security problem in how it imports model files, reported in a GitHub security advisory rated high severity.",
+        "previously": "A specially crafted model file could make Ollama save data outside its own model folder when you imported it.",
+        "whatChanged": "Ollama now checks every path inside an imported model and refuses anything that points outside the model folder.",
+        "whyItMatters": "If you download models from places you do not fully trust, updating closes a way for a bad file to overwrite other files on your machine.",
+        "nextConfirmed": "Version 0.13.2 is available now from the releases page.",
+        "nextSpeculative": "Tools that bundle Ollama will likely pick up the fix in their next updates.",
+        "glossary": [
+          {
+            "term": "Security advisory",
+            "definition": "A public notice describing a vulnerability, who is affected and how to fix it."
+          },
+          {
+            "term": "Path traversal",
+            "definition": "A trick where a file name like ../../ escapes the folder it should stay in."
+          }
+        ],
+        "analogy": "It is like a mail room that used to accept any delivery address on a parcel and now only delivers inside the building.",
+        "intermediate": "The import code joined archive entry names to the destination path without normalizing them. The patch resolves each path and rejects entries whose resolved location is outside the models directory.",
+        "technical": "Fix in PR #9811 validates filepath.Rel(modelsDir, target) and rejects results beginning with \"..\". Affected: < 0.13.2. Advisory GHSA-7x2q-fixture, severity high.",
+        "source": "llm",
+        "model": "qwen3:4b-instruct",
+        "validationNotes": []
+      },
+      "links": [
+        {
+          "label": "Ollama v0.13.2",
+          "url": "https://github.com/ollama/ollama/releases/tag/v0.13.2",
+          "kind": "release"
+        },
+        {
+          "label": "Security advisory GHSA-7x2q-fixture",
+          "url": "https://github.com/ollama/ollama/security/advisories/GHSA-7x2q-fixture",
+          "kind": "advisory"
+        },
+        {
+          "label": "Validate import paths (#9811)",
+          "url": "https://github.com/ollama/ollama/pull/9811",
+          "kind": "pull_request"
+        }
+      ],
+      "updatedAt": "2026-11-10T09:40:00Z"
+    },
+    {
+      "id": "vitejs-vite-v7-node-floor",
+      "repo": "vitejs/vite",
+      "status": "released",
+      "statusEvidenceUrl": "https://github.com/vitejs/vite/releases/tag/v7.3.0",
+      "categories": [
+        "web",
+        "developer-tools"
+      ],
+      "score": {
+        "total": 56,
+        "band": "high",
+        "dimensions": [
+          {
+            "key": "security",
+            "max": 25,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "breaking",
+            "max": 20,
+            "awarded": 18,
+            "signals": [
+              {
+                "points": 12,
+                "reason": "Release notes include a BREAKING section",
+                "evidenceUrl": "https://github.com/vitejs/vite/releases/tag/v7.3.0"
+              },
+              {
+                "points": 6,
+                "reason": "Minimum Node.js version raised"
+              }
+            ]
+          },
+          {
+            "key": "capability",
+            "max": 20,
+            "awarded": 16,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "New option for environment-specific builds",
+                "evidenceUrl": "https://github.com/vitejs/vite/pull/20412"
+              },
+              {
+                "points": 8,
+                "reason": "Minor version adds a documented public API"
+              }
+            ]
+          },
+          {
+            "key": "reliability",
+            "max": 15,
+            "awarded": 6,
+            "signals": [
+              {
+                "points": 6,
+                "reason": "Release notes list three regression fixes"
+              }
+            ]
+          },
+          {
+            "key": "ecosystem",
+            "max": 10,
+            "awarded": 9,
+            "signals": [
+              {
+                "points": 9,
+                "reason": "Build tool used by this site and many frameworks"
+              }
+            ]
+          },
+          {
+            "key": "relevance",
+            "max": 10,
+            "awarded": 7,
+            "signals": [
+              {
+                "points": 7,
+                "reason": "Normal-priority repository on topic web"
+              }
+            ]
+          }
+        ],
+        "confidence": "high",
+        "confidenceReason": "Release notes and the merged pull request agree.",
+        "ranksAboveNext": "because its breaking change (+16) affects existing projects, while the next story is still unreleased"
+      },
+      "explanation": {
+        "headline": "Vite 7.3 drops support for older Node.js versions and adds per-environment builds",
+        "whatHappened": "Vite, a popular tool that bundles web apps, released version 7.3. The release notes mark a breaking change: it no longer runs on older Node.js versions.",
+        "previously": "Projects could build with Vite on older Node.js releases that are near the end of their support.",
+        "whatChanged": "Vite now requires a newer Node.js, and it adds an option to build different versions of an app for different environments.",
+        "whyItMatters": "If your build machine runs an older Node.js, upgrading Vite will stop your builds until you update Node.js too.",
+        "nextConfirmed": "Version 7.3.0 is published on npm.",
+        "nextSpeculative": "",
+        "glossary": [
+          {
+            "term": "Node.js",
+            "definition": "The program that runs JavaScript outside the browser, used by most web build tools."
+          }
+        ],
+        "analogy": "",
+        "intermediate": "The engines field now excludes older Node.js lines. The new environment option lets one config produce separate client and server bundles.",
+        "technical": "",
+        "source": "llm",
+        "model": "qwen3:4b-instruct",
+        "validationNotes": []
+      },
+      "links": [
+        {
+          "label": "Vite v7.3.0",
+          "url": "https://github.com/vitejs/vite/releases/tag/v7.3.0",
+          "kind": "release"
+        },
+        {
+          "label": "Environment builds (#20412)",
+          "url": "https://github.com/vitejs/vite/pull/20412",
+          "kind": "pull_request"
+        }
+      ],
+      "updatedAt": "2026-11-10T03:15:00Z"
+    },
+    {
+      "id": "lnd-taproot-assets-rpc",
+      "repo": "lightningnetwork/lnd",
+      "status": "merged",
+      "statusEvidenceUrl": "https://github.com/lightningnetwork/lnd/pull/9502",
+      "previousStatus": "in_development",
+      "categories": [
+        "bitcoin",
+        "lightning"
+      ],
+      "score": {
+        "total": 38,
+        "band": "notable",
+        "dimensions": [
+          {
+            "key": "security",
+            "max": 25,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "breaking",
+            "max": 20,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "capability",
+            "max": 20,
+            "awarded": 14,
+            "signals": [
+              {
+                "points": 14,
+                "reason": "Adds a new RPC for channel fee policies",
+                "evidenceUrl": "https://github.com/lightningnetwork/lnd/pull/9502"
+              }
+            ]
+          },
+          {
+            "key": "reliability",
+            "max": 15,
+            "awarded": 8,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "Fixes fee update race noted in the linked issue",
+                "evidenceUrl": "https://github.com/lightningnetwork/lnd/issues/9477"
+              }
+            ]
+          },
+          {
+            "key": "ecosystem",
+            "max": 10,
+            "awarded": 8,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "Core Lightning implementation"
+              }
+            ]
+          },
+          {
+            "key": "relevance",
+            "max": 10,
+            "awarded": 8,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "Repository on your topic bitcoin"
+              }
+            ]
+          }
+        ],
+        "confidence": "medium",
+        "confidenceReason": "One merged pull request and one linked issue; not yet in a release.",
+        "ranksAboveNext": "because it adds a new capability (+14) while the next story is a smaller fix"
+      },
+      "explanation": {
+        "headline": "lnd merges a new way for node operators to set channel fees in bulk",
+        "whatHappened": "The developers of lnd, a widely used Lightning Network node, merged a change that lets operators update fee settings for many payment channels at once.",
+        "previously": "Operators had to update fees one channel at a time, and quick repeated updates could conflict.",
+        "whatChanged": "A new command applies one fee policy to a group of channels and fixes the conflict between overlapping updates.",
+        "whyItMatters": "Running a Lightning node gets less tedious. Note that this is merged code, not yet in a release you can install.",
+        "nextConfirmed": "The change is merged into the main branch.",
+        "nextSpeculative": "It would normally appear in the next lnd release.",
+        "glossary": [
+          {
+            "term": "Lightning Network",
+            "definition": "A system built on top of Bitcoin for fast, small payments."
+          },
+          {
+            "term": "Merged",
+            "definition": "Accepted into the main code, but not necessarily released to users."
+          }
+        ],
+        "analogy": "Like changing the price on every shelf in a shop with one sign instead of relabelling each item.",
+        "intermediate": "Adds a batch variant of the fee policy RPC and serializes policy updates per channel to avoid the race.",
+        "technical": "PR #9502 introduces BatchUpdateChanPolicy and moves policy writes behind a per-channel mutex; fixes #9477.",
+        "source": "llm",
+        "model": "qwen3:4b-instruct",
+        "validationNotes": []
+      },
+      "links": [
+        {
+          "label": "Batch channel policy updates (#9502)",
+          "url": "https://github.com/lightningnetwork/lnd/pull/9502",
+          "kind": "pull_request"
+        },
+        {
+          "label": "Fee update race (#9477)",
+          "url": "https://github.com/lightningnetwork/lnd/issues/9477",
+          "kind": "issue"
+        }
+      ],
+      "updatedAt": "2026-11-09T22:05:00Z"
+    },
+    {
+      "id": "claude-code-hooks-timeout",
+      "repo": "anthropics/claude-code",
+      "status": "released",
+      "statusEvidenceUrl": "https://github.com/anthropics/claude-code/releases/tag/v2.4.1",
+      "categories": [
+        "ai",
+        "developer-tools"
+      ],
+      "score": {
+        "total": 35,
+        "band": "notable",
+        "dimensions": [
+          {
+            "key": "security",
+            "max": 25,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "breaking",
+            "max": 20,
+            "awarded": 0,
+            "signals": []
+          },
+          {
+            "key": "capability",
+            "max": 20,
+            "awarded": 7,
+            "signals": [
+              {
+                "points": 7,
+                "reason": "Configurable timeout for hooks"
+              }
+            ]
+          },
+          {
+            "key": "reliability",
+            "max": 15,
+            "awarded": 10,
+            "signals": [
+              {
+                "points": 10,
+                "reason": "Release notes list a fix for hooks that hang",
+                "evidenceUrl": "https://github.com/anthropics/claude-code/releases/tag/v2.4.1"
+              }
+            ]
+          },
+          {
+            "key": "ecosystem",
+            "max": 10,
+            "awarded": 8,
+            "signals": [
+              {
+                "points": 8,
+                "reason": "Popular developer tool"
+              }
+            ]
+          },
+          {
+            "key": "relevance",
+            "max": 10,
+            "awarded": 10,
+            "signals": [
+              {
+                "points": 10,
+                "reason": "High-priority repository on topics ai and developer-tools"
+              }
+            ]
+          }
+        ],
+        "confidence": "medium",
+        "confidenceReason": "Release notes only; no linked pull request in the public repository."
+      },
+      "explanation": {
+        "headline": "Claude Code patch release adds a timeout for slow hooks",
+        "whatHappened": "Claude Code, a command-line coding assistant, published a small update that stops slow or stuck hooks from freezing a session.",
+        "previously": "A hook that never finished could leave the tool waiting indefinitely.",
+        "whatChanged": "Hooks now time out after a configurable limit, and the session continues with a warning.",
+        "whyItMatters": "Teams that run checks through hooks get fewer stuck sessions.",
+        "nextConfirmed": "The update is available now.",
+        "nextSpeculative": "",
+        "glossary": [
+          {
+            "term": "Hook",
+            "definition": "A small script a tool runs automatically at a certain moment."
+          }
+        ],
+        "analogy": "",
+        "intermediate": "",
+        "technical": "",
+        "source": "llm",
+        "model": "qwen3:4b-instruct",
+        "validationNotes": []
+      },
+      "links": [
+        {
+          "label": "Claude Code v2.4.1",
+          "url": "https://github.com/anthropics/claude-code/releases/tag/v2.4.1",
+          "kind": "release"
+        }
+      ],
+      "updatedAt": "2026-11-09T19:30:00Z"
+    }
+  ],
+  "worthWatching": [
+    {
+      "title": "Discussion: revisit default mempool relay policy",
+      "repo": "bitcoin/bitcoin",
+      "url": "https://github.com/bitcoin/bitcoin/issues/33610",
+      "status": "proposed",
+      "note": "An open proposal with active review. Nothing has been decided."
+    },
+    {
+      "title": "Change default caching for fetch in app router",
+      "repo": "vercel/next.js",
+      "url": "https://github.com/vercel/next.js/pull/84120",
+      "status": "in_development",
+      "note": "Open pull request with recent commits; could change defaults for many apps if merged."
+    }
+  ],
+  "transcript": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "title": "Good morning",
+      "text": "Good morning. This is TheRepoReport for Tuesday, November 10. Four stories cleared the bar since last night.",
+      "spokenText": "Good morning. This is TheRepoReport for Tuesday, November 10. Four stories cleared the bar since last night."
+    },
+    {
+      "id": "headlines",
+      "kind": "headlines",
+      "title": "Top headlines",
+      "text": "Ollama fixes a high-severity model import flaw. Vite 7.3 raises its Node.js requirement. And lnd merges bulk fee updates.",
+      "spokenText": "Ollama fixes a high-severity model import flaw. Vite 7.3 raises its Node.js requirement. And lnd merges bulk fee updates."
+    },
+    {
+      "id": "lead",
+      "kind": "lead",
+      "title": "Ollama ships a fix for a model-import flaw that could write files outside its folder",
+      "text": "Ollama, the tool that runs AI models on your own computer, published version 0.13.2. It fixes a security problem in how it imports model files, reported in a GitHub security advisory rated high severity. If you download models from places you do not fully trust, updating closes a way for a bad file to overwrite other files on your machine.",
+      "spokenText": "Ollama, the tool that runs AI models on your own computer, published version 0.13.2. It fixes a security problem in how it imports model files, reported in a GitHub security advisory rated high severity. If you download models from places you do not fully trust, updating closes a way for a bad file to overwrite other files on your machine.",
+      "storyId": "ollama-ollama-model-import-path"
+    },
+    {
+      "id": "story-2",
+      "kind": "story",
+      "title": "Vite 7.3 drops support for older Node.js versions and adds per-environment builds",
+      "text": "Vite, a popular tool that bundles web apps, released version 7.3. The release notes mark a breaking change: it no longer runs on older Node.js versions. If your build machine runs an older Node.js, upgrading Vite will stop your builds until you update Node.js too.",
+      "spokenText": "Vite, a popular tool that bundles web apps, released version 7.3. The release notes mark a breaking change: it no longer runs on older Node.js versions. If your build machine runs an older Node.js, upgrading Vite will stop your builds until you update Node.js too.",
+      "storyId": "vitejs-vite-v7-node-floor"
+    },
+    {
+      "id": "story-3",
+      "kind": "story",
+      "title": "lnd merges a new way for node operators to set channel fees in bulk",
+      "text": "The developers of lnd, a widely used Lightning Network node, merged a change that lets operators update fee settings for many payment channels at once. Running a Lightning node gets less tedious. Note that this is merged code, not yet in a release you can install.",
+      "spokenText": "The developers of lnd, a widely used Lightning Network node, merged a change that lets operators update fee settings for many payment channels at once. Running a Lightning node gets less tedious. Note that this is merged code, not yet in a release you can install.",
+      "storyId": "lnd-taproot-assets-rpc"
+    },
+    {
+      "id": "story-4",
+      "kind": "story",
+      "title": "Claude Code patch release adds a timeout for slow hooks",
+      "text": "Claude Code, a command-line coding assistant, published a small update that stops slow or stuck hooks from freezing a session. Teams that run checks through hooks get fewer stuck sessions.",
+      "spokenText": "Claude Code, a command-line coding assistant, published a small update that stops slow or stuck hooks from freezing a session. Teams that run checks through hooks get fewer stuck sessions.",
+      "storyId": "claude-code-hooks-timeout"
+    },
+    {
+      "id": "watching",
+      "kind": "watching",
+      "title": "Worth watching",
+      "text": "Two proposals to keep an eye on: a Bitcoin Core discussion about relay policy, and an open Next.js pull request on caching defaults.",
+      "spokenText": "Two proposals to keep an eye on: a Bitcoin Core discussion about relay policy, and an open Next.js pull request on caching defaults."
+    },
+    {
+      "id": "closing",
+      "kind": "closing",
+      "title": "Closing",
+      "text": "If you run Ollama, update today. That is the morning edition. The next one is at 1:15 PM Eastern.",
+      "spokenText": "If you run Ollama, update today. That is the morning edition. The next one is at 1:15 PM Eastern."
+    }
+  ],
+  "audio": {
+    "available": true,
+    "file": "audio.mp3",
+    "bytes": 150379,
+    "durationSec": 75,
+    "voice": "en_US-lessac-medium",
+    "chapters": [
+      {
+        "id": "intro",
+        "title": "Good morning",
+        "startSec": 0
+      },
+      {
+        "id": "headlines",
+        "title": "Top headlines",
+        "startSec": 6
+      },
+      {
+        "id": "lead",
+        "title": "Ollama ships a fix for a model-import flaw that could write files outside its folder",
+        "startSec": 13,
+        "storyId": "ollama-ollama-model-import-path"
+      },
+      {
+        "id": "story-2",
+        "title": "Vite 7.3 drops support for older Node.js versions and adds per-environment builds",
+        "startSec": 30,
+        "storyId": "vitejs-vite-v7-node-floor"
+      },
+      {
+        "id": "story-3",
+        "title": "lnd merges a new way for node operators to set channel fees in bulk",
+        "startSec": 41,
+        "storyId": "lnd-taproot-assets-rpc"
+      },
+      {
+        "id": "story-4",
+        "title": "Claude Code patch release adds a timeout for slow hooks",
+        "startSec": 51,
+        "storyId": "claude-code-hooks-timeout"
+      },
+      {
+        "id": "watching",
+        "title": "Worth watching",
+        "startSec": 60
+      },
+      {
+        "id": "closing",
+        "title": "Closing",
+        "startSec": 68
+      }
+    ]
+  },
+  "metrics": {
+    "githubRequests": 214,
+    "githubRateRemaining": 786,
+    "reposScanned": 23,
+    "eventsCollected": 61,
+    "storiesConsidered": 17,
+    "modelLoadSeconds": 41.2,
+    "inferenceSeconds": 512.6,
+    "tokensPerSecond": 9.8,
+    "audioSeconds": 96.4,
+    "totalSeconds": 1104,
+    "peakMemoryMb": 5120
+  }
+}
