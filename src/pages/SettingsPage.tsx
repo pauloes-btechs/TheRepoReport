@@ -605,7 +605,7 @@ function EditorialEditor({ editorial, onChange, errors }: { editorial: Editorial
             </label>
             <input id={`${base}-voice`} value={editorial.voice} onChange={(e) => onChange({ voice: e.target.value })} className={cx(input, 'mt-1')} spellCheck={false} aria-describedby={`${base}-voice-help`} />
             <p id={`${base}-voice-help`} className="mt-1 text-xs text-ink-3">
-              Kokoro: <code>kokoro:bm_george</code>, <code>kokoro:af_heart</code>, or co-anchors taking turns <code>kokoro:bm_george|af_heart</code>. Piper: a voice name such as <code>en_US-ljspeech-high</code>.
+              Kokoro: <code>kokoro:bm_george</code>, <code>kokoro:af_heart</code>, or <code>kokoro:bm_george|af_heart</code> to alternate narrators from one edition to the next. Piper: a voice name such as <code>en_US-ljspeech-high</code>.
             </p>
           </div>
           <div>

@@ -77,3 +77,20 @@ describe('published URLs', () => {
     }
   });
 });
+
+describe('voiceForEdition', () => {
+  it('gives each edition one narrator and changes voice from one edition to the next', async () => {
+    const { voiceForEdition } = await import('./edition');
+    const v = 'kokoro:bm_george|af_heart';
+    const keys = ['2026-11-10-morning', '2026-11-10-afternoon', '2026-11-10-evening', '2026-11-11-morning', '2026-11-11-afternoon'];
+    const picked = keys.map((k) => voiceForEdition(v, k));
+    for (const p of picked) expect(p).toMatch(/^kokoro:(bm_george|af_heart)$/);
+    for (let i = 1; i < picked.length; i++) expect(picked[i]).not.toBe(picked[i - 1]);
+  });
+
+  it('leaves single voices alone', async () => {
+    const { voiceForEdition } = await import('./edition');
+    expect(voiceForEdition('kokoro:bm_george', '2026-11-10-morning')).toBe('kokoro:bm_george');
+    expect(voiceForEdition('en_US-ljspeech-high', '2026-11-10-morning')).toBe('en_US-ljspeech-high');
+  });
+});

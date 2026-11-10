@@ -4,13 +4,13 @@ TheRepoReport narrates each edition with [Piper](https://github.com/OHF-Voice/pi
 neural text-to-speech engine, then FFmpeg joins, normalizes and encodes the result
 (`pipeline/audio`).
 
-## Default voices: Kokoro George and Heart, as co-anchors
+## Default voices: Kokoro George and Heart, alternating by edition
 
 Editions are narrated by [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M), an open speech model with Apache-2.0 weights, run through [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx) (MIT). It replaced Piper as the default on 2026-11-10 because Piper's narration sounded choppy.
 
 | | |
 |---|---|
-| Configured in | `config/editorial.json` → `voice: "kokoro:bm_george\|af_heart"`. The voices take turns segment by segment (George opens). Use `kokoro:bm_george` or `kokoro:af_heart` for a single narrator. |
+| Configured in | `config/editorial.json` → `voice: "kokoro:bm_george\|af_heart"`. Each edition is read by one of them, rotating slot by slot so consecutive editions change voice (`voiceForEdition` in `shared/edition.ts`). Use `kokoro:bm_george` or `kokoro:af_heart` for a single narrator. |
 | Other voices | `kokoro:am_michael` (US male), `kokoro:af_bella`, `kokoro:am_adam`, and others in `voices-v1.0.bin`. Chosen by listening tests: George (British male) and Heart (US female) sounded best. |
 | Blends | `kokoro:am_michael:60,af_heart:40` mixes two voices by weight into one narrator |
 | Model | `kokoro-v1.0.fp16.onnx` (177 MB) + `voices-v1.0.bin` (28 MB), downloaded from the kokoro-onnx GitHub release and cached by Actions |
