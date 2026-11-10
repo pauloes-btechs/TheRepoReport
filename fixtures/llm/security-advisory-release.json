@@ -1,0 +1,179 @@
+{
+  "name": "security-advisory-release",
+  "description": "Critical security advisory in a small repository, fixed in a published release.",
+  "expectedRank": 1,
+  "story": {
+    "id": "story:smallcrypto/bolt-wallet-kit:GHSA-7x2q-9fvm-r4wp",
+    "repo": "smallcrypto/bolt-wallet-kit",
+    "title": "Signature check bypass in invoice decoder",
+    "status": "released",
+    "statusEvidenceUrl": "https://github.com/smallcrypto/bolt-wallet-kit/releases/tag/v2.8.3",
+    "categories": [
+      "Bitcoin",
+      "security"
+    ],
+    "firstSeen": "2026-11-09T20:10:00Z",
+    "updatedAt": "2026-11-09T21:40:00Z",
+    "events": [
+      {
+        "body": "The invoice decoder in versions before 2.8.3 read payment details before checking the invoice signature. A crafted invoice could make the wallet display a different payee than the one that would be paid. Patched in v2.8.3. Users should upgrade.",
+        "labels": [],
+        "refs": [],
+        "id": "advisory:GHSA-7x2q-9fvm-r4wp",
+        "kind": "advisory",
+        "repo": "smallcrypto/bolt-wallet-kit",
+        "title": "Signature check bypass in invoice decoder",
+        "url": "https://github.com/smallcrypto/bolt-wallet-kit/security/advisories/GHSA-7x2q-9fvm-r4wp",
+        "state": "published",
+        "severity": "critical",
+        "cveId": "CVE-2026-48211",
+        "ghsaId": "GHSA-7x2q-9fvm-r4wp",
+        "createdAt": "2026-11-09T21:40:00Z",
+        "updatedAt": "2026-11-09T21:40:00Z",
+        "publishedAt": "2026-11-09T21:40:00Z"
+      },
+      {
+        "body": "Security release. Fixes a signature verification bypass in the invoice decoder (CVE-2026-48211). All users should upgrade.",
+        "labels": [],
+        "refs": [],
+        "id": "release:smallcrypto/bolt-wallet-kit:v2.8.3",
+        "kind": "release",
+        "repo": "smallcrypto/bolt-wallet-kit",
+        "title": "v2.8.3",
+        "tagName": "v2.8.3",
+        "url": "https://github.com/smallcrypto/bolt-wallet-kit/releases/tag/v2.8.3",
+        "state": "published",
+        "prerelease": false,
+        "createdAt": "2026-11-09T21:35:00Z",
+        "updatedAt": "2026-11-09T21:35:00Z",
+        "publishedAt": "2026-11-09T21:35:00Z"
+      },
+      {
+        "body": "Moves signature verification ahead of payee parsing so unsigned fields are never shown to the user.",
+        "labels": [
+          "security"
+        ],
+        "refs": [],
+        "id": "pull_request:smallcrypto/bolt-wallet-kit#431",
+        "kind": "pull_request",
+        "repo": "smallcrypto/bolt-wallet-kit",
+        "number": 431,
+        "title": "Verify invoice signature before decoding payment details",
+        "url": "https://github.com/smallcrypto/bolt-wallet-kit/pull/431",
+        "state": "merged",
+        "createdAt": "2026-11-08T16:00:00Z",
+        "updatedAt": "2026-11-09T20:10:00Z",
+        "mergedAt": "2026-11-09T20:10:00Z"
+      }
+    ],
+    "score": {
+      "total": 75,
+      "band": "major",
+      "dimensions": [
+        {
+          "key": "security",
+          "max": 25,
+          "awarded": 25,
+          "signals": [
+            {
+              "points": 25,
+              "reason": "Advisory rated critical severity",
+              "evidenceUrl": "https://github.com/smallcrypto/bolt-wallet-kit/security/advisories/GHSA-7x2q-9fvm-r4wp"
+            }
+          ]
+        },
+        {
+          "key": "breaking",
+          "max": 20,
+          "awarded": 16,
+          "signals": [
+            {
+              "points": 16,
+              "reason": "Decoder now refuses to show unsigned payee fields",
+              "evidenceUrl": "https://github.com/smallcrypto/bolt-wallet-kit/pull/431"
+            }
+          ]
+        },
+        {
+          "key": "capability",
+          "max": 20,
+          "awarded": 5,
+          "signals": [
+            {
+              "points": 5,
+              "reason": "Patched version published"
+            }
+          ]
+        },
+        {
+          "key": "reliability",
+          "max": 15,
+          "awarded": 12,
+          "signals": [
+            {
+              "points": 12,
+              "reason": "Fix linked to a published release",
+              "evidenceUrl": "https://github.com/smallcrypto/bolt-wallet-kit/releases/tag/v2.8.3"
+            }
+          ]
+        },
+        {
+          "key": "ecosystem",
+          "max": 10,
+          "awarded": 7,
+          "signals": [
+            {
+              "points": 7,
+              "reason": "Wallet library used by downstream apps"
+            }
+          ]
+        },
+        {
+          "key": "relevance",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Matches topics: bitcoin, security"
+            }
+          ]
+        }
+      ],
+      "confidence": "high",
+      "confidenceReason": "Advisory, release and pull request agree",
+      "ranksAboveNext": "Critical advisory outweighs the next story's reliability fix"
+    }
+  },
+  "cannedOutput": {
+    "headline": "bolt-wallet-kit releases v2.8.3 to fix a critical invoice signature flaw",
+    "whatHappened": "The maintainers of bolt-wallet-kit published version 2.8.3. It fixes a critical security flaw in the part of the library that reads payment invoices.",
+    "previously": "Older versions read the payment details in an invoice before checking its signature. A fake invoice could make the wallet show the wrong person to pay.",
+    "whatChanged": "Version 2.8.3 checks the invoice signature first. Details that are not signed are never shown to the user.",
+    "whyItMatters": "Wallet apps built on this library could show users the wrong payee, and people could send money to the wrong place. The maintainers ask all users to upgrade.",
+    "nextConfirmed": "The advisory tells all users to upgrade to version 2.8.3.",
+    "nextSpeculative": "Wallet apps that use this library might publish their own updates soon.",
+    "glossary": [
+      {
+        "term": "invoice",
+        "definition": "A payment request that says who should be paid and how much."
+      },
+      {
+        "term": "signature",
+        "definition": "A digital seal that proves who created a message and that nobody changed it."
+      },
+      {
+        "term": "security advisory",
+        "definition": "A public notice that describes a security flaw and how to fix it."
+      },
+      {
+        "term": "CVE",
+        "definition": "A public ID number for a known security flaw, here CVE-2026-48211."
+      }
+    ],
+    "analogy": "It is like a cashier who read the name on a check before confirming the signature. Now the signature is checked first.",
+    "intermediate": "The decoder parsed payee fields before verifying the invoice signature. Pull request #431 moves verification first, and release v2.8.3 ships the fix.",
+    "technical": "Signature verification now precedes payee parsing in the invoice decoder (CVE-2026-48211, GHSA-7x2q-9fvm-r4wp). Unsigned fields are no longer surfaced to callers."
+  },
+  "expectValid": true
+}

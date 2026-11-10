@@ -1,0 +1,24 @@
+{
+  "name": "merged-feature",
+  "note": "Fixture evidence for a fictional repository. Shows a merged change that is not released.",
+  "status": "merged",
+  "band": "high",
+  "evidence": "Repository: example-org/quickcache\nStatus: Merged\n- pull_request #812 \"Add optional compression for cached values\" merged 2099-02-03 labels=[feature]: \"Adds a compress option. Off by default. Reduces memory use for large text values.\"",
+  "explanation": {
+    "headline": "quickcache merges optional compression for cached values",
+    "whatHappened": "The quickcache project merged a change that adds an optional compression setting for cached values.",
+    "previously": "quickcache stored every value exactly as it was given, so large text values used a lot of memory.",
+    "whatChanged": "A new compress option can shrink values before they are stored. It is off unless you turn it on.",
+    "whyItMatters": "Apps that keep large text in quickcache could use less memory once this reaches a release. The change is merged into the main code but is not in a published version yet, so users do not have it.",
+    "nextConfirmed": "No next step has been announced.",
+    "nextSpeculative": "The option could appear in the project's next version.",
+    "glossary": [
+      { "term": "cache", "definition": "A fast, temporary store that keeps data close by so a program does not have to fetch it again." },
+      { "term": "merged", "definition": "Accepted into the project's main code. It still has to be included in a release before most people can use it." },
+      { "term": "compression", "definition": "Squeezing data so it takes up less space, then unpacking it when it is needed." }
+    ],
+    "analogy": "",
+    "intermediate": "Pull request #812 adds an opt-in compress flag. Values are compressed on write and decompressed on read.",
+    "technical": "The change adds a compress option, off by default, intended to reduce memory for large text values. Behavior is unchanged unless the option is enabled."
+  }
+}

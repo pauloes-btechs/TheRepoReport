@@ -1,0 +1,170 @@
+{
+  "name": "pr-issue-release",
+  "description": "One change seen as an issue, the pull request that fixed it, and the release that shipped it.",
+  "expectedRank": 2,
+  "story": {
+    "id": "story:ollama/ollama#12345",
+    "repo": "ollama/ollama",
+    "title": "Fix GPU memory leak when switching models",
+    "status": "released",
+    "statusEvidenceUrl": "https://github.com/ollama/ollama/releases/tag/v0.12.4",
+    "categories": [
+      "AI",
+      "ai"
+    ],
+    "firstSeen": "2026-11-03T10:00:00Z",
+    "updatedAt": "2026-11-09T18:00:00Z",
+    "events": [
+      {
+        "body": "After loading and unloading several models, GPU memory is not freed until the server restarts. Eventually new models fail to load.",
+        "labels": [
+          "bug",
+          "gpu"
+        ],
+        "refs": [],
+        "id": "issue:ollama/ollama#12001",
+        "kind": "issue",
+        "repo": "ollama/ollama",
+        "number": 12001,
+        "title": "GPU memory keeps growing after switching between models",
+        "url": "https://github.com/ollama/ollama/issues/12001",
+        "state": "closed",
+        "createdAt": "2026-11-03T10:00:00Z",
+        "updatedAt": "2026-11-07T12:00:00Z",
+        "comments": 23
+      },
+      {
+        "body": "Releases the KV cache buffers when a model is unloaded. Fixes #12001.",
+        "labels": [
+          "bug"
+        ],
+        "refs": [
+          "ollama/ollama#12001"
+        ],
+        "id": "pull_request:ollama/ollama#12345",
+        "kind": "pull_request",
+        "repo": "ollama/ollama",
+        "number": 12345,
+        "title": "Fix GPU memory leak when switching models",
+        "url": "https://github.com/ollama/ollama/pull/12345",
+        "state": "merged",
+        "createdAt": "2026-11-05T09:00:00Z",
+        "updatedAt": "2026-11-07T12:00:00Z",
+        "mergedAt": "2026-11-07T12:00:00Z"
+      },
+      {
+        "body": "What's Changed\n- Fix GPU memory leak when switching models (#12345)\n- Improved error message when a model file is missing",
+        "labels": [],
+        "refs": [],
+        "id": "release:ollama/ollama:v0.12.4",
+        "kind": "release",
+        "repo": "ollama/ollama",
+        "title": "v0.12.4",
+        "tagName": "v0.12.4",
+        "url": "https://github.com/ollama/ollama/releases/tag/v0.12.4",
+        "state": "published",
+        "createdAt": "2026-11-09T18:00:00Z",
+        "updatedAt": "2026-11-09T18:00:00Z",
+        "publishedAt": "2026-11-09T18:00:00Z"
+      }
+    ],
+    "score": {
+      "total": 58,
+      "band": "high",
+      "dimensions": [
+        {
+          "key": "security",
+          "max": 25,
+          "awarded": 9,
+          "signals": [
+            {
+              "points": 9,
+              "reason": "Memory exhaustion could stop the server"
+            }
+          ]
+        },
+        {
+          "key": "breaking",
+          "max": 20,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "capability",
+          "max": 20,
+          "awarded": 14,
+          "signals": [
+            {
+              "points": 14,
+              "reason": "Reliable model switching and a clearer error message"
+            }
+          ]
+        },
+        {
+          "key": "reliability",
+          "max": 15,
+          "awarded": 15,
+          "signals": [
+            {
+              "points": 15,
+              "reason": "Fixes a memory leak reported in a bug issue",
+              "evidenceUrl": "https://github.com/ollama/ollama/pull/12345"
+            }
+          ]
+        },
+        {
+          "key": "ecosystem",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Widely used local inference runtime"
+            }
+          ]
+        },
+        {
+          "key": "relevance",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Matches topics: ai; priority 3 repository"
+            }
+          ]
+        }
+      ],
+      "confidence": "high",
+      "confidenceReason": "Issue, pull request and release agree",
+      "ranksAboveNext": "A released reliability fix outranks a merged but unreleased feature"
+    }
+  },
+  "cannedOutput": {
+    "headline": "ollama v0.12.4 fixes a GPU memory leak when switching models",
+    "whatHappened": "The ollama project published version 0.12.4. It fixes a bug where graphics card memory was not freed after switching between AI models.",
+    "previously": "Users reported that memory kept growing each time a model was unloaded. After a while, new models could fail to load until the server restarted.",
+    "whatChanged": "When a model is unloaded, ollama now frees the memory buffers it was holding. The release also improves the error message when a model file is missing.",
+    "whyItMatters": "People who run several local AI models on one machine can switch between them without restarting the server or running out of graphics memory.",
+    "nextConfirmed": "No next step has been announced.",
+    "nextSpeculative": "",
+    "glossary": [
+      {
+        "term": "GPU",
+        "definition": "A graphics card, a chip that is very good at the math AI models need."
+      },
+      {
+        "term": "memory leak",
+        "definition": "A bug where a program keeps memory it no longer needs, so free memory slowly runs out."
+      },
+      {
+        "term": "KV cache",
+        "definition": "Short-term memory a language model keeps while it works, so it does not redo earlier steps."
+      }
+    ],
+    "analogy": "It is like a library that never put returned books back on the shelf, until the shelves were full. Now returned books go back right away.",
+    "intermediate": "Pull request #12345 frees the KV cache buffers on model unload, closing issue #12001. It is included in v0.12.4.",
+    "technical": "Model unload now releases KV cache buffers that previously stayed allocated on the GPU (#12345, fixes #12001). The v0.12.4 notes also list an improved missing-model-file error."
+  },
+  "expectValid": true
+}

@@ -1,0 +1,131 @@
+{
+  "name": "merged-unreleased-feature",
+  "description": "A feature merged into the main branch that is not yet in a release.",
+  "expectedRank": 3,
+  "story": {
+    "id": "story:vitejs/vite#20811",
+    "repo": "vitejs/vite",
+    "title": "feat: add bundle size report to build output",
+    "status": "merged",
+    "statusEvidenceUrl": "https://github.com/vitejs/vite/pull/20811",
+    "categories": [
+      "Web"
+    ],
+    "firstSeen": "2026-11-04T08:00:00Z",
+    "updatedAt": "2026-11-10T14:02:00Z",
+    "events": [
+      {
+        "body": "Adds an optional build.reportSize setting. When enabled, `vite build` prints a table of output files with raw and gzip sizes and flags files that grew compared to the previous build. Off by default.",
+        "labels": [
+          "feat",
+          "p3-significant"
+        ],
+        "refs": [],
+        "id": "pull_request:vitejs/vite#20811",
+        "kind": "pull_request",
+        "repo": "vitejs/vite",
+        "number": 20811,
+        "title": "feat: add bundle size report to build output",
+        "url": "https://github.com/vitejs/vite/pull/20811",
+        "state": "merged",
+        "createdAt": "2026-11-04T08:00:00Z",
+        "updatedAt": "2026-11-10T14:02:00Z",
+        "mergedAt": "2026-11-10T14:02:00Z",
+        "comments": 31
+      }
+    ],
+    "score": {
+      "total": 47,
+      "band": "notable",
+      "dimensions": [
+        {
+          "key": "security",
+          "max": 25,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "breaking",
+          "max": 20,
+          "awarded": 0,
+          "signals": []
+        },
+        {
+          "key": "capability",
+          "max": 20,
+          "awarded": 18,
+          "signals": [
+            {
+              "points": 18,
+              "reason": "New opt-in build setting",
+              "evidenceUrl": "https://github.com/vitejs/vite/pull/20811"
+            }
+          ]
+        },
+        {
+          "key": "reliability",
+          "max": 15,
+          "awarded": 11,
+          "signals": [
+            {
+              "points": 11,
+              "reason": "Helps catch size regressions"
+            }
+          ]
+        },
+        {
+          "key": "ecosystem",
+          "max": 10,
+          "awarded": 10,
+          "signals": [
+            {
+              "points": 10,
+              "reason": "Core web build tool"
+            }
+          ]
+        },
+        {
+          "key": "relevance",
+          "max": 10,
+          "awarded": 8,
+          "signals": [
+            {
+              "points": 8,
+              "reason": "Matches topics: developer-tools"
+            }
+          ]
+        }
+      ],
+      "confidence": "medium",
+      "confidenceReason": "Single primary source (merged pull request)",
+      "ranksAboveNext": "A merged feature in a core tool outranks a network change still under review"
+    }
+  },
+  "cannedOutput": {
+    "headline": "vite merges an optional bundle size report for builds",
+    "whatHappened": "The vite project merged a change that adds an optional size report to its build command. The change is in the main code but is not part of a published version yet.",
+    "previously": "Developers had to use separate tools to see how big each output file was after a build.",
+    "whatChanged": "A new build.reportSize setting prints a table of output files with their sizes. It also points out files that grew since the last build. It is off unless you turn it on.",
+    "whyItMatters": "Web developers could spot pages getting heavier before their users notice slower loading. People using current versions of vite do not have this yet.",
+    "nextConfirmed": "No release date for this change has been announced.",
+    "nextSpeculative": "The setting might appear in the next vite version.",
+    "glossary": [
+      {
+        "term": "bundle",
+        "definition": "The packed files a build tool creates for a website, ready to send to browsers."
+      },
+      {
+        "term": "gzip",
+        "definition": "A common way to compress files so they download faster."
+      },
+      {
+        "term": "merged",
+        "definition": "Accepted into the main code. It still needs a release before most people can use it."
+      }
+    ],
+    "analogy": "It is like a moving company adding a scale that weighs every box and flags the ones that got heavier since the last move.",
+    "intermediate": "Pull request #20811 adds a build.reportSize option. When enabled, vite build prints raw and gzip sizes per output file and flags growth.",
+    "technical": "The opt-in build.reportSize setting reports raw and gzip sizes for emitted files and compares them with the previous build to flag growth. Default behavior is unchanged."
+  },
+  "expectValid": true
+}

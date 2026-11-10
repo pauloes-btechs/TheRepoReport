@@ -1,10 +1,27 @@
 {
   "version": 1,
-  "topics": ["bitcoin", "defi", "ai", "security", "payments", "developer-tools"],
-  "weights": { "security": 25, "breaking": 20, "capability": 20, "reliability": 15, "ecosystem": 10, "relevance": 10 },
+  "topics": [
+    "bitcoin",
+    "defi",
+    "ai",
+    "security",
+    "payments",
+    "developer-tools"
+  ],
+  "weights": {
+    "security": 25,
+    "breaking": 20,
+    "capability": 20,
+    "reliability": 15,
+    "ecosystem": 10,
+    "relevance": 10
+  },
   "minScore": 35,
   "maxStories": 8,
-  "targetMinutes": { "min": 5, "max": 12 },
+  "targetMinutes": {
+    "min": 5,
+    "max": 12
+  },
   "retentionDays": 7,
   "voice": "en_US-lessac-medium",
   "model": "qwen3:4b-instruct",
@@ -20,6 +37,9 @@
     "OAuth": "oh auth",
     "SQL": "sequel",
     "UI": "U I",
-    "npm": "N P M"
+    "npm": "N P M",
+    "AI": "A I",
+    "GPU": "G P U",
+    "ID": "I D"
   }
 }
