@@ -31,7 +31,7 @@ You can still edit `config/watchlist.json` or `config/editorial.json` directly o
 
 ## Schedule and edition identity
 
-Runs start at **7:15, 13:15 and 19:15 New York time**. The schedule uses `timezone: "America/New_York"`, so GitHub handles daylight-saving changes. The edition key (`YYYY-MM-DD-morning|afternoon|evening`) comes from the New York wall clock when the run starts (`shared/edition.ts`), not from which cron fired. A run that starts 50 minutes late is still the right edition. A run before 7:05 belongs to the previous evening.
+Runs start at **7:15, 13:15 and 19:15 New York time**. Each edition is scheduled twice in UTC, once for winter time (UTC−5) and once for summer time (UTC−4); the run at the wrong offset finds its slot already published and exits in seconds. (GitHub's time-zone option was tried first and fired an hour early after the November 2026 clock change.) The edition key (`YYYY-MM-DD-morning|afternoon|evening`) comes from the New York wall clock when the run starts (`shared/edition.ts`), not from which cron fired. A run that starts 50 minutes late is still the right edition. A run before 7:05 belongs to the previous evening.
 
 - **Duplicate guard.** The first real step (`run.ts --check-only`) reads the live `data/manifest.json`. If the key is already published, the job ends successfully without installing Ollama or Piper, without deploying, and without touching state. Re-running a finished run is a no-op.
 - **Concurrency.** `concurrency: { group: edition, cancel-in-progress: false }`. One run executes at a time. GitHub keeps at most one more run pending in the group, and a newer pending run replaces an older one.

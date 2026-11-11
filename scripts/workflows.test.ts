@@ -1,15 +1,29 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { newYorkClock } from '../shared/edition';
 
 const edition = readFileSync('.github/workflows/edition.yml', 'utf8');
 const keepalive = readFileSync('.github/workflows/keepalive.yml', 'utf8');
 
 describe('edition.yml', () => {
-  it('schedules three New York editions', () => {
-    for (const cron of ['15 7 * * *', '15 13 * * *', '15 19 * * *']) {
-      expect(edition).toMatch(new RegExp(`- cron: '${cron.replace(/\*/g, '\\*')}'\\n\\s+timezone: "America/New_York"`));
+  it('fires each edition at 7:15 AM, 1:15 PM and 7:15 PM New York time in both winter and summer', () => {
+    const crons = [...edition.matchAll(/- cron: '(\d+) (\d+) \* \* \*'/g)].map((m) => ({ minute: Number(m[1]), hour: Number(m[2]) }));
+    expect(crons).toHaveLength(6);
+    expect(edition).not.toMatch(/timezone:/);
+    for (const day of ['2026-01-15', '2026-07-15', '2026-11-10', '2026-03-09']) {
+      const fired = new Set<string>();
+      for (const { minute, hour } of crons) {
+        // A cron fires every UTC day; check the firings around this New York date.
+        for (const offsetDays of [0, 1]) {
+          const at = new Date(`${day}T00:00:00Z`);
+          at.setUTCDate(at.getUTCDate() + offsetDays);
+          at.setUTCHours(hour, minute);
+          const clock = newYorkClock(at);
+          if (clock.date === day) fired.add(`${String(Math.floor(clock.minutes / 60)).padStart(2, '0')}:${String(clock.minutes % 60).padStart(2, '0')}`);
+        }
+      }
+      for (const time of ['07:15', '13:15', '19:15']) expect([day, fired.has(time)]).toEqual([day, true]);
     }
-    expect(edition.match(/timezone: "America\/New_York"/g)).toHaveLength(3);
   });
 
   it('declares every manual input', () => {
