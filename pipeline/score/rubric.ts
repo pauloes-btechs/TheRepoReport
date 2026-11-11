@@ -93,6 +93,7 @@ function security(s: Story): Signal[] {
     );
   }
   signals.push(...firstMatch(s.events, hasLabel(/security|vulnerab/i), 8, () => 'Labeled as a security issue'));
+  signals.push(...firstMatch(s.events, hasLabel(/^safety$|safety-critical/i), 5, () => 'Labeled as safety work'));
   signals.push(
     ...firstMatch(s.events, (e) => SECURITY_TITLE.test(e.title), 6, () => 'Title describes a vulnerability or exploit'),
   );
@@ -125,7 +126,16 @@ function breaking(s: Story): Signal[] {
 // ── New capability ──
 
 const FEATURE_SECTION = /^\s*#{1,4}\s*(new features?|features?|what'?s new|added|enhancements?)\b|^\s*[-*]\s*feat(\(|!|:)/im;
-const FEATURE_TITLE = /^\s*(feat(\(|!|:)|add(s|ed)?\b|introduc|implement|support for\b|new\b)/i;
+const FEATURE_TITLE = /^\s*(feat(\(|!|:)|add(s|ed)?\b|introduc|implement|support(s)?\b|new\b|expose|enable|allow)/i;
+
+/**
+ * Many projects prefix titles with the component they touch
+ * ("notifyrelay: Add an authenticated APNs relay"). Strip it so title rules see the verb.
+ */
+export function titleVerb(title: string): string {
+  return title.replace(/^\s*(?!feat\b|fix\b)[\w./-]{2,30}(\([^)]*\))?!?:\s+/i, '');
+}
+const isFeatureTitle = (title: string) => FEATURE_TITLE.test(title) || FEATURE_TITLE.test(titleVerb(title));
 
 // Many projects write release notes as "- Added …" / "* Fixed …" bullets rather
 // than "## Features" headings (Claude Code, Ollama, Next.js all do).
@@ -163,10 +173,11 @@ function capability(s: Story): Signal[] {
       : []),
     ...firstMatch(
       s.events,
-      (e) => e.kind === 'pull_request' && FEATURE_TITLE.test(e.title),
+      (e) => e.kind === 'pull_request' && isFeatureTitle(e.title),
       5,
       () => 'Pull request adds new functionality',
     ),
+    ...countSignal(s, (e) => e.kind === 'pull_request' && isFeatureTitle(e.title), 3, 6, (n) => `${n} merged pull requests add functionality`),
   ];
 }
 
@@ -195,6 +206,7 @@ function reliability(s: Story): Signal[] {
     ...firstMatch(s.events, hasLabel(/perf/i), 5, () => 'Labeled as performance work'),
     ...firstMatch(s.events, hasLabel(/\bbug\b/i), 4, () => 'Labeled as a bug'),
     ...(patch ? [{ points: 3, reason: `Patch release ${patch.tagName}`, evidenceUrl: patch.url }] : []),
+    ...countSignal(s, (e) => e.kind === 'pull_request' && FIX_TITLE.test(e.title), 3, 4, (n) => `${n} merged pull requests fix problems`),
   ];
 }
 
@@ -215,6 +227,14 @@ function ecosystem(s: Story): Signal[] {
     signals.push({ points: 3, reason: `Shipped to users via ${shipped.kind === 'release' ? 'a release' : 'a published advisory'}`, evidenceUrl: shipped.url });
   } else if (merged) {
     signals.push({ points: 1, reason: 'Merged into the main codebase', evidenceUrl: merged.url });
+  }
+  const mergedPulls = s.events.filter((e) => e.kind === 'pull_request' && e.state === 'merged');
+  if (mergedPulls.length >= 6) {
+    signals.push({
+      points: mergedPulls.length >= 20 ? 7 : mergedPulls.length >= 10 ? 5 : 3,
+      reason: `${mergedPulls.length} pull requests merged in this window`,
+      evidenceUrl: mergedPulls.at(-1)!.url,
+    });
   }
   const busiest = [...s.events].sort((a, b) => engagement(b) - engagement(a))[0];
   if (busiest && engagement(busiest) >= 10) {
@@ -237,6 +257,12 @@ function ecosystem(s: Story): Signal[] {
   return signals;
 }
 
+/** Points for a story with several matching pull requests (roundups), beyond the single-event signal. */
+function countSignal(s: Story, match: (e: RawEvent) => boolean, min: number, points: number, reason: (n: number) => string): Signal[] {
+  const hits = s.events.filter(match);
+  return hits.length >= min ? [{ points, reason: reason(hits.length), evidenceUrl: hits.at(-1)!.url }] : [];
+}
+
 const engagement = (e: RawEvent) => (e.comments ?? 0) + (e.reactions ?? 0);
 
 // ── Personal relevance ──
@@ -254,8 +280,12 @@ function relevance(s: Story, ctx: RubricContext): Signal[] {
   const storyTerms = [
     ...(ctx.repo?.topics ?? []),
     ...s.categories,
+    ...(ctx.repo?.category ? [ctx.repo.category] : []),
     ...s.events.flatMap((e) => e.labels),
-  ].map((t) => t.toLowerCase());
+  ]
+    // Categories like "Bitcoin, lightning" hold several terms.
+    .flatMap((t) => t.toLowerCase().split(/\s*[,/|;]\s*/))
+    .filter(Boolean);
   const overlap = [...new Set(storyTerms.filter((t) => interests.has(t)))].sort();
   if (overlap.length > 0) {
     signals.push({

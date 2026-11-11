@@ -6,18 +6,21 @@ import { createHash } from 'node:crypto';
 import type { BuildStories } from '../../shared/contracts';
 import type { PipelineState, RawEvent, Story, StoryState } from '../../shared/schemas';
 import { groupEvents, type Component } from './group';
+import { digestBusyRepos } from './digest';
 import { classify } from './status';
 
 export { classify, statusRank, urlForEventId } from './status';
+export { DIGEST_MIN_MERGED, digestBusyRepos, isRoundup, roundupThemes } from './digest';
 
 export const buildStories: BuildStories = (events, known) => {
   const unique = dedupeEvents(events);
   if (unique.length === 0) return [];
   const referenceTime = Math.max(...unique.map((e) => Date.parse(e.updatedAt)));
 
-  return groupEvents(unique, known)
+  const stories = groupEvents(unique, known)
     .map((component) => toStory(component, known, referenceTime))
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt) || a.id.localeCompare(b.id));
+  return digestBusyRepos(stories);
 };
 
 export function storyIdFor(primaryEventId: string): string {

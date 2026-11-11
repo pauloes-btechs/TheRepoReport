@@ -5,6 +5,7 @@
  * through the validator and, if a quoted title trips a check (for example a
  * hostile PR title), rebuilds with neutral references instead of titles.
  */
+import { isRoundup, roundupThemes } from '../stories/digest';
 import {
   BAND_LABELS,
   DIMENSION_LABELS,
@@ -120,6 +121,22 @@ function build(story: ScoredStory, safe: boolean): LlmExplanation {
       break;
     }
     case 'merged': {
+      if (isRoundup(story)) {
+        terms.add('merged');
+        terms.add('pull request');
+        const pulls = story.events.filter((e) => e.kind === 'pull_request');
+        const themes = roundupThemes(story, 3);
+        const first = eventDate(pulls[0]!);
+        const last = eventDate(pulls.at(-1)!);
+        headline = `${name} merges ${pulls.length} changes${themes[0] && !safe ? `, led by ${cleanTitle(themes[0].theme)} work` : ''}`;
+        whatHappened = `The ${name} team merged ${pulls.length} pull requests ${first === last ? `on ${first}` : `between ${first} and ${last}`}.`;
+        if (themes.length && !safe) whatHappened += ` The busiest areas were ${themes.map((t) => `${cleanTitle(t.theme)} (${t.count})`).join(', ')}.`;
+        whatHappened += ` Examples include ${pulls.slice(-3).map((e) => ref(e, safe)).join(', ')}. These changes are in the main code but have not shipped in a release yet.`;
+        whatChanged = `The main code of ${name} moved forward on several fronts at once, but people using published versions do not have these changes yet. Status: ${status}.`;
+        nextConfirmed = 'No release date for these changes has been announced.';
+        nextSpeculative = 'They might be included in a future release.';
+        break;
+      }
       terms.add('merged');
       if (pr) terms.add('pull request');
       headline = `${name} merges ${ref(pr ?? p, safe)}`;
