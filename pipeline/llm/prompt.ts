@@ -3,6 +3,7 @@
  * enforces it. Evidence is wrapped in delimiters, sanitized and trimmed so the
  * whole request fits Ollama's 4,096-token context with room for the answer.
  */
+import { isRoundup, roundupThemes } from '../stories/digest';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import {
@@ -140,6 +141,7 @@ export function buildEvidenceBundle(story: ScoredStory, maxChars = EVIDENCE_CHAR
     `Impact score: ${story.score.total}/100 (${BAND_LABELS[story.score.band]})`,
   ];
   if (signals.length) head.push(`Scoring signals: ${signals.join(' | ')}`);
+  if (isRoundup(story)) return roundupBundle(story, head, maxChars);
   head.push('Events:');
 
   const events = story.events.slice(0, MAX_EVENTS);
@@ -164,6 +166,25 @@ export function buildEvidenceBundle(story: ScoredStory, maxChars = EVIDENCE_CHAR
   return bundle;
 }
 
+const ROUNDUP_MAX_TITLES = 40;
+
+/** A roundup lists every merged pull request as one line (no bodies), so the model sees the whole burst. */
+function roundupBundle(story: ScoredStory, head: string[], maxChars: number): string {
+  const pulls = story.events.filter((e) => e.kind === 'pull_request');
+  const themes = roundupThemes(story);
+  if (themes.length) head.push(`Most active areas: ${themes.map((t) => `${oneLine(t.theme, 30)} (${t.count})`).join(', ')}`);
+  head.push(`Merged pull requests (${pulls.length}):`);
+  const lines = pulls.slice(0, ROUNDUP_MAX_TITLES).map((e) => {
+    const labels = e.labels.length ? ` [${oneLine(e.labels.join(', '), 60)}]` : '';
+    return `  - #${e.number} merged ${(e.mergedAt ?? e.updatedAt).slice(0, 10)}: ${oneLine(sanitizeUntrusted(e.title), 110)}${labels} (${e.url})`;
+  });
+  const omitted = pulls.length - lines.length;
+  const tail = [omitted > 0 ? `(${omitted} more pull requests omitted)` : '', EVIDENCE_CLOSE].filter(Boolean);
+  let bundle = [...head, ...lines, ...tail].join('\n');
+  if (bundle.length > maxChars) bundle = `${bundle.slice(0, maxChars - EVIDENCE_CLOSE.length - 3)}…\n${EVIDENCE_CLOSE}`;
+  return bundle;
+}
+
 /** The request for one story: rules that depend on the story, then the evidence, then a reminder. */
 export function buildUserPrompt(story: ScoredStory): string {
   const status = STATUS_LABELS[story.status];
@@ -176,6 +197,11 @@ export function buildUserPrompt(story: ScoredStory): string {
     lines.push('Merged is not released: do not say released, shipped, available, or "you can now".');
   } else if (story.status === 'proposed' || story.status === 'in_development') {
     lines.push('This is not merged: do not say merged, accepted, released, or available.');
+  }
+  if (isRoundup(story)) {
+    lines.push(
+      `This story is a roundup of ${story.events.filter((e) => e.kind === 'pull_request').length} pull requests merged in one repository. The headline should sum up the overall direction of the work. In whatHappened, name the two or three most significant changes or areas by what they do for users. Do not present a single pull request as the whole story.`,
+    );
   }
   lines.push(
     wantsTechnicalLayers(story)
