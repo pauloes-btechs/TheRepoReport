@@ -22,11 +22,14 @@ const KEEP_SEPARATE_LABEL = /security|vulnerab|breaking|deprecat/i;
 
 export const isRoundup = (story: Pick<Story, 'id'>) => story.id.startsWith(DIGEST_PREFIX);
 
-/** A merged pull request (with any linked issues) that has not shipped and is not sensitive. */
+/**
+ * Merged pull requests (one, or a stack that references each other, plus any
+ * linked issues) that have not shipped and are not sensitive.
+ */
 function foldable(story: Story): boolean {
   if (story.status !== 'merged' || isRoundup(story)) return false;
   const pulls = story.events.filter((e) => e.kind === 'pull_request');
-  if (pulls.length !== 1) return false;
+  if (pulls.length === 0 || pulls.some((p) => p.state !== 'merged')) return false;
   if (story.events.some((e) => e.kind === 'release' || e.kind === 'advisory')) return false;
   return !story.events.some((e) => KEEP_SEPARATE_TITLE.test(e.title) || e.labels.some((l) => KEEP_SEPARATE_LABEL.test(l)));
 }
@@ -72,6 +75,17 @@ function toRoundup(group: Story[]): Story {
     firstSeen: group.map((s) => s.firstSeen).sort()[0]!,
     updatedAt: group.map((s) => s.updatedAt).sort().at(-1)!,
   };
+}
+
+const HOUSEKEEPING = /^(docs?|ci|tests?|chore|build|deps|style|lint|typo)$/i;
+
+/** Pull requests in a roundup that change the product, not docs, CI or tests. */
+export function substantivePulls(story: Story) {
+  return story.events.filter((e) => {
+    if (e.kind !== 'pull_request') return false;
+    const scope = /^\s*([\w./-]{2,30})(?:\([^)]*\))?!?:\s/.exec(e.title)?.[1];
+    return !(scope && HOUSEKEEPING.test(scope)) && !/^\s*(docs?|ci|test)\b/i.test(e.title);
+  });
 }
 
 /** Component prefixes ("sdk: …", "notifyrelay: …") ranked by how many pull requests touched them. */
