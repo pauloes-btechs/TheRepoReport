@@ -61,7 +61,7 @@ describe('busy-repository roundups', () => {
     expect(reasons).toEqual(
       expect.arrayContaining([
         'Pull request adds new functionality',
-        expect.stringMatching(/merged pull requests add functionality/),
+        expect.stringMatching(/merged pull requests change the product/),
         '12 pull requests merged in this window',
         'Labeled as safety work',
         expect.stringMatching(/Matches your topics: bitcoin/),
@@ -116,5 +116,46 @@ describe('scope-prefixed titles and multi-word categories', () => {
     const [scored] = scoreStories(buildStories([merged(1, 'docs: tidy readme')], {}), { editorial, repos: [repoConfig] });
     const relevance = scored!.score.dimensions.find((d) => d.key === 'relevance')!;
     expect(relevance.signals.map((s) => s.reason)).toContain('Matches your topics: bitcoin');
+  });
+});
+
+describe('roundup with the real wavelength day (2026-11-10)', () => {
+  const REAL = [
+    'ci: Allow relay builds to share an image repository',
+    'notifyrelay: Keep disabled-token grants retryable',
+    'notifyrelay: Bound replay storage per installation',
+    'notifyrelay: Support app-verified receipt hints',
+    'notifyrelay: Add an authenticated APNs relay',
+    'docs: map persistent round runtime and recovery',
+    'sdk: expose paused host-driven startup',
+    'sdk: Attempt warm receipt recovery and round maintenance',
+    'sdk: Verify enrolled Bitcoin invoice receipt sources',
+    'sdk: Read finite current canonical activity batches',
+    'multi: Join domain work before releasing daemon stores',
+    'round: persist client runtime across restarts',
+    'txconfirm: quiet expected lease renewal misses',
+    'docs: map round checkpoint ownership',
+    'sdk: retain shutdown ownership across caller timeouts',
+    'notification: Register configured swap sources',
+    'notification: Authorize SDK relay subscriptions',
+  ];
+
+  it('folds stacked pull requests in too and clears the reporting threshold', () => {
+    const events = REAL.map((t, i) =>
+      // The first two reference each other, as stacked PRs do; alone they would form a separate story.
+      merged(i, t, i === 1 ? { refs: [`${REPO}#1500`] } : {}),
+    );
+    const stories = buildStories(events, {});
+    expect(stories).toHaveLength(1);
+    expect(stories[0]!.title).toBe('17 pull requests merged in wavelength');
+    const [scored] = scoreStories(stories, { editorial, repos: [repoConfig] });
+    const reasons = scored!.score.dimensions.flatMap((d) => d.signals.map((s) => s.reason));
+    expect(reasons).toEqual(
+      expect.arrayContaining([
+        '14 merged pull requests change the product (not docs, CI or tests)',
+        expect.stringMatching(/improve recovery, retries or resilience/),
+      ]),
+    );
+    expect(scored!.score.total).toBeGreaterThanOrEqual(editorial.minScore);
   });
 });

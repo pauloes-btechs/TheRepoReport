@@ -3,6 +3,7 @@
  * default maxima (25/20/20/15/10/10) and scaled to the configured weights.
  * A signal is only emitted when a concrete event justifies it.
  */
+import { isRoundup, substantivePulls } from '../stories/digest';
 import type { DimensionKey, EditorialConfig, ManifestRepo, RawEvent, Story } from '../../shared/schemas';
 
 export const BASE_MAX: Record<DimensionKey, number> = {
@@ -177,7 +178,7 @@ function capability(s: Story): Signal[] {
       5,
       () => 'Pull request adds new functionality',
     ),
-    ...countSignal(s, (e) => e.kind === 'pull_request' && isFeatureTitle(e.title), 3, 6, (n) => `${n} merged pull requests add functionality`),
+    ...(isRoundup(s) ? roundupCapability(s) : countSignal(s, (e) => e.kind === 'pull_request' && isFeatureTitle(e.title), 3, 6, (n) => `${n} merged pull requests add functionality`)),
   ];
 }
 
@@ -185,6 +186,7 @@ function capability(s: Story): Signal[] {
 
 const FIX_TITLE = /\b(fix(es|ed)?|bug(fix)?)\b/i;
 const SEVERE_FAILURE = /regression|crash|panic|memory leak|deadlock|data loss|corrupt|segfault/i;
+const RESILIENCE_TITLE = /\b(retr(y|ies|yable)|recover(y|s|ed)?|restart|timeouts?|resilien\w*|persist\w*|reconnect\w*|backoff|race|leak|bound(ed)?)\b/i;
 const PERF_TITLE = /\b(perf(ormance)?|faster|speed ?up|latency|throughput)\b/i;
 
 function reliability(s: Story): Signal[] {
@@ -207,6 +209,13 @@ function reliability(s: Story): Signal[] {
     ...firstMatch(s.events, hasLabel(/\bbug\b/i), 4, () => 'Labeled as a bug'),
     ...(patch ? [{ points: 3, reason: `Patch release ${patch.tagName}`, evidenceUrl: patch.url }] : []),
     ...countSignal(s, (e) => e.kind === 'pull_request' && FIX_TITLE.test(e.title), 3, 4, (n) => `${n} merged pull requests fix problems`),
+    ...countSignal(
+      s,
+      (e) => e.kind === 'pull_request' && !FIX_TITLE.test(e.title) && RESILIENCE_TITLE.test(e.title),
+      3,
+      4,
+      (n) => `${n} merged pull requests improve recovery, retries or resilience`,
+    ),
   ];
 }
 
@@ -231,7 +240,7 @@ function ecosystem(s: Story): Signal[] {
   const mergedPulls = s.events.filter((e) => e.kind === 'pull_request' && e.state === 'merged');
   if (mergedPulls.length >= 6) {
     signals.push({
-      points: mergedPulls.length >= 20 ? 7 : mergedPulls.length >= 10 ? 5 : 3,
+      points: mergedPulls.length >= 20 ? 8 : mergedPulls.length >= 10 ? 5 : 3,
       reason: `${mergedPulls.length} pull requests merged in this window`,
       evidenceUrl: mergedPulls.at(-1)!.url,
     });
@@ -255,6 +264,19 @@ function ecosystem(s: Story): Signal[] {
     });
   }
   return signals;
+}
+
+/** A busy repository's roundup: credit the volume of product changes, whatever verbs the titles use. */
+function roundupCapability(s: Story): Signal[] {
+  const code = substantivePulls(s);
+  if (code.length < 5) return [];
+  return [
+    {
+      points: code.length >= 20 ? 15 : code.length >= 10 ? 12 : 8,
+      reason: `${code.length} merged pull requests change the product (not docs, CI or tests)`,
+      evidenceUrl: code.at(-1)!.url,
+    },
+  ];
 }
 
 /** Points for a story with several matching pull requests (roundups), beyond the single-event signal. */
