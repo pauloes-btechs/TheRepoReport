@@ -22,8 +22,6 @@ import {
   type Window,
 } from './normalize';
 
-export { extractRefs, sanitizeText } from './text';
-
 const DEFAULT_LOOKBACK_HOURS = 36;
 const STARRED_MAX_PAGES = 10;
 /** Cached repo metadata lives next to its ETag, because a 304 carries no body. */
