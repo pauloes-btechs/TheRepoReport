@@ -205,12 +205,7 @@ export async function runEdition(deps: EditionDeps, opts: RunEditionOptions): Pr
 
   try {
     // 1. Edition identity.
-    const edition: ResolvedEdition = await stage('resolve', () => {
-      if (!opts.editionOverride) return resolveEdition(now);
-      const parsed = parseEditionKey(opts.editionOverride);
-      if (!parsed) throw new Error(`Invalid edition override "${opts.editionOverride}" (expected YYYY-MM-DD-morning|afternoon|evening)`);
-      return parsed;
-    });
+    const edition: ResolvedEdition = await stage('resolve', () => editionFor(now, opts.editionOverride));
     summary.editionKey = edition.key;
     logger.info('edition resolved', { key: edition.key, dryRun, force: opts.force ?? false });
 
@@ -473,15 +468,7 @@ export async function checkPublished(opts: {
   logger?: Logger;
   archiveRetryDelayMs?: number;
 }): Promise<PublishedCheck> {
-  const now = opts.now ?? new Date();
-  let editionKey: string;
-  if (opts.editionOverride) {
-    const parsed = parseEditionKey(opts.editionOverride);
-    if (!parsed) throw new Error(`Invalid edition override "${opts.editionOverride}"`);
-    editionKey = parsed.key;
-  } else {
-    editionKey = resolveEdition(now).key;
-  }
+  const editionKey = editionFor(opts.now ?? new Date(), opts.editionOverride).key;
   const live = await fetchLiveManifest(opts.siteUrl, {
     ...(opts.fetch ? { fetch: opts.fetch } : {}),
     ...(opts.logger ? { logger: opts.logger } : {}),
@@ -489,6 +476,14 @@ export async function checkPublished(opts: {
   });
   const alreadyPublished = live.status === 'ok' && live.manifest.editions.some((e) => e.key === editionKey);
   return { editionKey, alreadyPublished, proceed: !alreadyPublished || (opts.force ?? false), manifest: live.status };
+}
+
+/** The override when given, else the New York slot that `now` falls in. */
+function editionFor(now: Date, override: string | undefined): ResolvedEdition {
+  if (!override) return resolveEdition(now);
+  const parsed = parseEditionKey(override);
+  if (!parsed) throw new Error(`Invalid edition override "${override}" (expected YYYY-MM-DD-morning|afternoon|evening)`);
+  return parsed;
 }
 
 async function writeJson(path: string, value: unknown): Promise<void> {
