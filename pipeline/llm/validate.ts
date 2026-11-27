@@ -3,7 +3,8 @@
  * the model to behave; this module checks that it did, using only the evidence
  * the deterministic stages collected.
  */
-import { LlmExplanation, STATUS_ORDER, type DevStatus, type ScoredStory } from '../../shared/schemas';
+import { LlmExplanation, type DevStatus, type ScoredStory } from '../../shared/schemas';
+import { statusRank } from '../stories/status';
 import { SECRET_PATTERNS } from '../util/redact';
 import { evidenceCorpus, evidenceUrls, normalizeUrl } from './evidence';
 
@@ -159,10 +160,6 @@ function wordsOverlap(a: string, b: string): boolean {
   if (a === b) return true;
   const [short, long] = a.length <= b.length ? [a, b] : [b, a];
   return short.length >= 4 && long.startsWith(short);
-}
-
-function statusRank(s: DevStatus): number {
-  return STATUS_ORDER.indexOf(s);
 }
 
 /** Validate an already-parsed object (or a raw model string) against the story's evidence. */
