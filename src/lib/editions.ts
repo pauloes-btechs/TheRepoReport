@@ -62,8 +62,6 @@ export interface ArchiveDay {
   editions: ManifestEdition[];
 }
 
-const EDITION_ORDER: Record<EditionName, number> = { morning: 0, afternoon: 1, evening: 2 };
-
 /** Editions grouped by date, newest date first and newest edition first within a day. */
 export function groupByDate(editions: ManifestEdition[]): ArchiveDay[] {
   const days = new Map<string, ManifestEdition[]>();
@@ -76,7 +74,7 @@ export function groupByDate(editions: ManifestEdition[]): ArchiveDay[] {
     .sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
     .map(([date, list]) => ({
       date,
-      editions: list.sort((a, b) => EDITION_ORDER[b.edition] - EDITION_ORDER[a.edition]),
+      editions: list.sort((a, b) => EDITIONS.indexOf(b.edition) - EDITIONS.indexOf(a.edition)),
     }));
 }
 
