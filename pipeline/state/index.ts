@@ -6,9 +6,9 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { CollectResult } from '../../shared/contracts';
+import { statusRank } from '../stories/status';
 import {
   PipelineState,
-  STATUS_ORDER,
   emptyState,
   type DevStatus,
   type Story,
@@ -138,7 +138,7 @@ export function previousStatusIfAdvanced(
 ): DevStatus | undefined {
   const prev = registryEntry?.lastCoveredStatus;
   if (!prev) return undefined;
-  return STATUS_ORDER.indexOf(current) > STATUS_ORDER.indexOf(prev) ? prev : undefined;
+  return statusRank(current) > statusRank(prev) ? prev : undefined;
 }
 
 export interface NextStateInput {
