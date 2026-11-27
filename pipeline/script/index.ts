@@ -7,7 +7,6 @@
 import type { BuildScript, ScriptInput } from '../../shared/contracts';
 import { EDITION_GREETINGS, EDITION_TITLES } from '../../shared/edition';
 import {
-  STATUS_ORDER,
   type DevStatus,
   type EditionName,
   type ExplainedStory,
@@ -15,6 +14,7 @@ import {
   type ScriptSegment,
 } from '../../shared/schemas';
 import { repoName, sanitizeUntrusted, truncate } from '../llm/evidence';
+import { statusRank } from '../stories/status';
 import { pronounce } from './pronounce';
 
 export { pronounce, speakRepo, speakVersion, stripMarkdown } from './pronounce';
@@ -183,7 +183,7 @@ function watchTitle(story: ScoredStory): string {
 
 function watchText(watching: ScoredStory[]): string {
   const items = watching.slice(0, MAX_WATCH_ITEMS);
-  const allUnreleased = items.every((w) => STATUS_ORDER.indexOf(w.status) < STATUS_ORDER.indexOf('released'));
+  const allUnreleased = items.every((w) => statusRank(w.status) < statusRank('released'));
   const parts: string[] = [
     allUnreleased
       ? 'Worth watching. These items are still in progress: none of them is in a release yet, and plans can change'

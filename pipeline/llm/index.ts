@@ -21,7 +21,7 @@ import { validateExplanation } from './validate';
 
 /** Extra knobs for tests and the eval harness. Production callers pass plain ExplainOptions. */
 export interface ExplainInternals {
-  /** Per-request timeout. Default DEFAULT_REQUEST_TIMEOUT_MS (300 s). */
+  /** Per-request timeout. Defaults to DEFAULT_REQUEST_TIMEOUT_MS. */
   requestTimeoutMs?: number;
   /** Style-guide text; defaults to editorial/instructions.md read at run time. */
   instructions?: string;
