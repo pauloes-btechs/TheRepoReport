@@ -36,10 +36,6 @@ export function audioPathFor(reportPath: string, file = 'audio.mp3'): string {
   return `${editionDir(reportPath)}${file}`;
 }
 
-export function reportPathFor(key: string): string {
-  return `data/editions/${key}/report.json`;
-}
-
 interface FetchOptions {
   /** Return null instead of throwing when the file does not exist. */
   allowMissing?: boolean;

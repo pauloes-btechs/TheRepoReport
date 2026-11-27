@@ -9,8 +9,8 @@ import { groupEvents, type Component } from './group';
 import { digestBusyRepos } from './digest';
 import { classify } from './status';
 
-export { classify, statusRank, urlForEventId } from './status';
-export { DIGEST_MIN_MERGED, digestBusyRepos, isRoundup, roundupThemes } from './digest';
+export { urlForEventId } from './status';
+export { isRoundup } from './digest';
 
 export const buildStories: BuildStories = (events, known) => {
   const unique = dedupeEvents(events);

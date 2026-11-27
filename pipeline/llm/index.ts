@@ -19,10 +19,6 @@ import {
 } from './prompt';
 import { validateExplanation } from './validate';
 
-export { fallbackExplanation } from './fallback';
-export { validateExplanation, checkAgainstEvidence, stripThinking } from './validate';
-export { buildEvidenceBundle, buildMessages, buildSystemPrompt, buildUserPrompt, explanationJsonSchema } from './prompt';
-
 /** Extra knobs for tests and the eval harness. Production callers pass plain ExplainOptions. */
 export interface ExplainInternals {
   /** Per-request timeout. Default 180 s. */
