@@ -84,6 +84,9 @@ async function runCollect(options: CollectOptions, deps: CollectDeps): Promise<C
     try {
       const scan = await scanRepo(client, entry.repo, { since, until: nowMs }, previous?.etags ?? {});
       events.push(...scan.events);
+      if (scan.truncated.length) {
+        logger.warn('listing hit its page limit; older activity in the window was skipped', { repo: entry.repo, listings: scan.truncated });
+      }
       nextRepoState[entry.repo] = { since: nowIso, etags: scan.etags };
       entry.lastScannedAt = nowIso;
       if (scan.lastActivityAt) entry.lastActivityAt = scan.lastActivityAt;
@@ -127,6 +130,8 @@ interface RepoScan {
   events: RawEvent[];
   etags: Record<string, string>;
   lastActivityAt?: string;
+  /** Cursor-bounded listings that stopped at their page limit; the cursor still advances past what they missed. */
+  truncated: string[];
 }
 
 async function scanRepo(
@@ -186,7 +191,9 @@ async function scanRepo(
       .map((a) => advisoryToEvent(repo, a, extras)),
   ];
 
-  return { events, etags, lastActivityAt: latest([meta.pushedAt, ...events.map((e) => e.updatedAt)]) };
+  // Advisories are not cursor-bounded, so a full first page is normal there.
+  const truncated = Object.entries({ releases, pulls, issues }).filter(([, r]) => r.truncated).map(([name]) => name);
+  return { events, etags, truncated, lastActivityAt: latest([meta.pushedAt, ...events.map((e) => e.updatedAt)]) };
 }
 
 interface RepoMeta {
