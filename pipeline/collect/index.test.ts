@@ -85,6 +85,21 @@ describe('collect', () => {
     expect(pullCalls.map((c) => new URL(c.url).searchParams.get('page'))).toEqual([null, '2']);
   });
 
+  it('warns when a listing stops at its page limit with pages left', async () => {
+    const page = (n: number) => ({ body: [], headers: { link: `<https://api.github.com/repos/acme/tinycrypt/issues?page=${n}>; rel="next"` } });
+    const endless: Routes = {
+      '/repos/acme/tinycrypt/issues': page(2),
+      '/repos/acme/tinycrypt/issues?page=2': page(3),
+      '/repos/acme/tinycrypt/issues?page=3': page(4),
+    };
+    const { github, collect } = setup(...fixtures(), endless);
+    const { logger, lines } = captureLogger();
+    await collect({ watchlist: watchlist([tinycrypt, mega]), state: emptyState(), now: NOW, fetch: github.fetch, logger });
+    const warnings = lines.filter((l) => l.includes('page limit'));
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('"repo":"acme/tinycrypt","listings":["issues"]');
+  });
+
   it('skips bot PRs, drafts, closed-unmerged work and signal-less issues', async () => {
     const { github, collect } = setup(...fixtures());
     const result = await collect({ watchlist: watchlist([mega]), state: emptyState(), now: NOW, fetch: github.fetch, logger: captureLogger().logger });

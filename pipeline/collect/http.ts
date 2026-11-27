@@ -47,6 +47,8 @@ export interface PagedResult<T> {
   etag?: string;
   notModified: boolean;
   missing: boolean;
+  /** Paging stopped at maxPages while more pages remained. */
+  truncated?: boolean;
 }
 
 export class GitHubClient {
@@ -149,10 +151,10 @@ export class GitHubClient {
       if (result.kind === 'missing') return { items: [], notModified: false, missing: true };
       if (page === 0) etag = result.etag;
       items.push(...result.data);
-      if (opts.stopWhen?.(result.data)) break;
+      if (opts.stopWhen?.(result.data)) return { items, etag, notModified: false, missing: false };
       url = result.next;
     }
-    return { items, etag, notModified: false, missing: false };
+    return { items, etag, notModified: false, missing: false, truncated: Boolean(url) };
   }
 
   private headers(etag?: string): Record<string, string> {
