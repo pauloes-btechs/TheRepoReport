@@ -227,7 +227,6 @@ export function mergeRepos(existing: WatchedRepo[], incoming: WatchedRepo[]): { 
   return { repos, added };
 }
 
-export const CONFIG_REPO = 'pauloes-btechs/TheRepoReport';
 /** GitHub accepts URLs well past this, but browsers and proxies may not. */
 export const MAX_ISSUE_URL = 7500;
 
@@ -246,6 +245,6 @@ export function saveToProductionUrl(files: { name: 'watchlist.json' | 'editorial
     ...files.flatMap((f) => [`\`\`\`json file=${f.name}`, f.content.trimEnd(), '```', '']),
   ].join('\n');
   const params = new URLSearchParams({ title: `[config] Update ${names}`, body });
-  const url = `https://github.com/${CONFIG_REPO}/issues/new?${params.toString()}`;
+  const url = `https://github.com/${REPO_FULL_NAME}/issues/new?${params.toString()}`;
   return url.length <= MAX_ISSUE_URL ? url : undefined;
 }
