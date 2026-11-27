@@ -11,7 +11,7 @@ export interface ProductionConfig {
 export function watchlistProblems(watchlist: WatchlistConfig): string[] {
   const slugs = watchlist.repos.map((r) => r.repo.toLowerCase());
   const dupes = [...new Set(slugs.filter((s, i) => slugs.indexOf(s) !== i))];
-  return dupes.length ? [`listed more than once: ${dupes.join(', ')}`] : [];
+  return dupes.length ? [`listed more than once: ${dupes.join(', ')}.`] : [];
 }
 
 /** Rules the editorial schema cannot express. Shared with scripts/apply-config-issue.ts. */
