@@ -17,6 +17,7 @@
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { editorialProblems, watchlistProblems } from '../pipeline/publish/config';
 import { EditorialConfig, WatchlistConfig } from '../shared/schemas';
 import { formatWatchlist } from './import-watched';
 
@@ -57,10 +58,9 @@ export function parseConfigIssue(body: string): ParsedUpdate {
         errors.push(`watchlist.json: ${parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'} ${i.message}`).join('; ')}`);
         continue;
       }
-      const slugs = parsed.data.repos.map((r) => r.repo.toLowerCase());
-      const dupes = slugs.filter((s, i) => slugs.indexOf(s) !== i);
-      if (dupes.length) {
-        errors.push(`watchlist.json: listed more than once: ${[...new Set(dupes)].join(', ')}`);
+      const problems = watchlistProblems(parsed.data);
+      if (problems.length) {
+        errors.push(...problems.map((p) => `watchlist.json: ${p}`));
         continue;
       }
       files['watchlist.json'] = formatWatchlist(parsed.data);
@@ -70,13 +70,9 @@ export function parseConfigIssue(body: string): ParsedUpdate {
         errors.push(`editorial.json: ${parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'} ${i.message}`).join('; ')}`);
         continue;
       }
-      const total = Object.values(parsed.data.weights).reduce((a, b) => a + b, 0);
-      if (total !== 100) {
-        errors.push(`editorial.json: rubric weights total ${total}, not 100.`);
-        continue;
-      }
-      if (parsed.data.targetMinutes.min > parsed.data.targetMinutes.max) {
-        errors.push('editorial.json: targetMinutes.min is larger than targetMinutes.max.');
+      const problems = editorialProblems(parsed.data);
+      if (problems.length) {
+        errors.push(...problems.map((p) => `editorial.json: ${p}`));
         continue;
       }
       files['editorial.json'] = `${JSON.stringify(parsed.data, null, 2)}\n`;
